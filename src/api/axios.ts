@@ -2,7 +2,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://api-sberbank-af152.up.railway.app",
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });
