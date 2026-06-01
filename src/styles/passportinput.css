@@ -1,0 +1,8 @@
+.passport-input {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .passport-input-compact {
+    width: 100%;
+  }

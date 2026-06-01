@@ -1,0 +1,20 @@
+.cash-ledger-page {
+    padding: 1rem;
+  }
+  .ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .ledger-table th, .ledger-table td {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    text-align: right;
+  }
+  .ledger-table th:first-child, .ledger-table td:first-child {
+    text-align: left;
+  }
+  .negative {
+    color: red;
+    font-weight: bold;
+  }

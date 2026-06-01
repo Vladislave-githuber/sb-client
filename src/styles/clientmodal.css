@@ -1,0 +1,10 @@
+.client-modal {
+    max-width: 500px;
+  }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    cursor: pointer;
+  }

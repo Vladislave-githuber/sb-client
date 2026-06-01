@@ -1,0 +1,4 @@
+.limits-page h1 { margin-bottom: 1rem; }
+.limits-table { width: 100%; border-collapse: collapse; }
+.limits-table th, .limits-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+.limits-table th { background: #f2f2f2; }

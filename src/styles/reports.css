@@ -1,0 +1,170 @@
+.reports-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Форма фильтров */
+  .reports-filters {
+    background-color: white;
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+  
+  .reports-filters .date-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  
+  .reports-filters .export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+  
+  @media (max-width: 768px) {
+    .reports-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .reports-filters .export-buttons {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+  }
+  
+  /* Основной блок отчёта */
+  .report-content {
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+  }
+  
+  /* Сводка (итоги) */
+  .report-summary {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 1rem;
+  }
+  
+  .report-summary h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .report-summary p {
+    color: var(--gray-600);
+    margin-bottom: 1rem;
+  }
+  
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .summary-stats .stat-card {
+    background-color: var(--gray-100);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    transition: transform 0.1s ease;
+  }
+  
+  .summary-stats .stat-card:hover {
+    transform: translateY(-2px);
+    background-color: var(--gray-200);
+  }
+  
+  /* Статистика по кассирам (только админ) */
+  .cashier-stats {
+    margin-bottom: 2rem;
+  }
+  
+  .cashier-stats h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  
+  .cashier-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--gray-50);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  
+  .cashier-table th,
+  .cashier-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-300);
+  }
+  
+  .cashier-table th {
+    background-color: var(--gray-200);
+    font-weight: 600;
+  }
+  
+  .cashier-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* Детали операций (таблица) */
+  .transactions-list h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  
+  .transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .transactions-table thead,
+  .transactions-table tbody {
+    display: table;
+    width: 100%;
+  }
+  
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .transactions-table th {
+    background-color: var(--gray-100);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  
+  .transactions-table tr:hover {
+    background-color: var(--gray-50);
+  }
+  
+  /* Адаптив для таблицы */
+  @media (max-width: 768px) {
+    .transactions-table th,
+    .transactions-table td {
+      padding: 0.5rem;
+      font-size: 0.75rem;
+    }
+  }

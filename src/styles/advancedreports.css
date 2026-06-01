@@ -1,0 +1,111 @@
+.advanced-reports {
+    padding: 1rem;
+  }
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+  .tabs button {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .tabs button.active {
+    background-color: #3b82f6;
+    color: white;
+  }
+  .filters-panel {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+  .date-filters {
+    display: flex;
+    gap: 1rem;
+  }
+  .report-content {
+    overflow-x: auto;
+  }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .report-table th,
+  .report-table td {
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+    text-align: left;
+  }
+  .report-table th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+  }
+  .summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .summary-card {
+    background: #eef2ff;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+  .profit {
+    color: #16a34a;
+    font-weight: bold;
+  }
+  .loss {
+    color: #dc2626;
+    font-weight: bold;
+  }
+  .warning {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .suspicious {
+    color: #dc2626;
+    font-weight: bold;
+  }
+  .no-data {
+    text-align: center;
+    color: #64748b;
+    padding: 2rem;
+  }
+  .loader {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .filter-group label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #475569;
+  }
+  .filter-group select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    min-width: 250px;
+  }

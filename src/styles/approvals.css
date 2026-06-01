@@ -1,0 +1,21 @@
+.approvals-page h1 { margin-bottom: 1rem; }
+.approval-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+.approval-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.badge {
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+.badge.pending { background: #ffc107; color: #333; }
+.approval-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }

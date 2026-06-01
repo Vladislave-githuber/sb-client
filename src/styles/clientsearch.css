@@ -1,0 +1,116 @@
+.client-search {
+  position: relative;
+  width: 100%;
+}
+
+/* Обёртка для инпута и кнопки очистки */
+.client-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.client-search-input-wrapper input {
+  width: 100%;
+  padding-right: 2rem; /* место для кнопки очистки */
+}
+
+/* Кнопка очистки (крестик) */
+.client-clear-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  padding: 0 0.25rem;
+  transition: color 0.2s;
+}
+
+.client-clear-btn:hover {
+  color: #dc2626;
+}
+
+/* Выпадающий список */
+.client-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 20;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.client-dropdown li {
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.15s;
+}
+
+.client-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.client-dropdown li:hover {
+  background-color: #dcfce7; /* светло-зелёный */
+}
+
+/* Блок с деталями выбранного клиента */
+.client-details {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.client-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.client-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.detail-value {
+  color: #1e293b;
+  text-align: right;
+  word-break: break-word;
+  max-width: 60%;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+  .client-dropdown {
+    max-height: 200px;
+  }
+
+  .client-detail-row {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .detail-value {
+    text-align: left;
+    max-width: 100%;
+  }
+}

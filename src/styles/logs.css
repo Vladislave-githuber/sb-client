@@ -1,0 +1,183 @@
+.logs-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.logs-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+/* Фильтры — как карточка */
+.logs-filters {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex: 1;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Обёртка таблицы с тенью и скруглением */
+.logs-table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  background-color: white;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.875rem;
+}
+
+.logs-table th,
+.logs-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logs-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.logs-table tr:hover {
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
+}
+
+/* Чередование строк */
+.logs-table tbody tr:nth-child(even) {
+  background-color: #fefefe;
+}
+
+/* Бейджи результатов */
+.log-result {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+}
+
+.log-result-success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.log-result-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.log-result-cancel {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Сумма в ячейке */
+.amount-cell {
+  text-align: right;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.no-data {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem;
+}
+
+/* Пагинация */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-controls.bottom {
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.page-size-selector select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
+  background-color: white;
+  font-size: 0.875rem;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-info {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  .logs-container {
+    padding: 1rem;
+  }
+  
+  .logs-table th,
+  .logs-table td {
+    padding: 0.5rem;
+  }
+  
+  .filter-row {
+    flex-direction: column;
+  }
+  
+  .logs-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+}

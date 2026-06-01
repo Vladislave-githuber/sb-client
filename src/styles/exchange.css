@@ -1,0 +1,395 @@
+/* Тускло-зелёная палитра с насыщенным акцентом как в истории */
+:root {
+  --exchange-bg: #f8fafc;
+  --exchange-card-bg: #ffffff;
+  --exchange-border: #e2e8f0;
+  --exchange-text-primary: #1e293b;
+  --exchange-text-secondary: #475569;
+  --exchange-accent-light: #dcfce7;
+  --exchange-accent-text: #166534;
+  --exchange-accent-border: #86efac;
+  --exchange-accent-hover: #bbf7d0;
+  --exchange-danger: #dc2626;
+  --exchange-danger-light: #fee2e2;
+  --exchange-shadow: rgba(0, 0, 0, 0.05);
+}
+
+.exchange-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.exchange-page-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--exchange-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.exchange-page-subtitle {
+  color: var(--exchange-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Сетка: курсы слева, форма справа */
+.exchange-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Боковая панель с курсами (вертикальный список) */
+.rates-sidebar {
+  background: var(--exchange-card-bg);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px var(--exchange-shadow);
+  border: 1px solid var(--exchange-border);
+}
+
+.rates-sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--exchange-text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--exchange-border);
+}
+
+.rates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Стили для CurrencyCard в зелёном акценте */
+.rates-list .currency-card {
+  background: #fafcff;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--exchange-border);
+  transition: all 0.2s;
+}
+
+.rates-list .currency-card:hover {
+  background: var(--exchange-accent-light);
+  border-color: var(--exchange-accent-border);
+  transform: translateX(4px);
+}
+
+.currency-code {
+  font-weight: 600;
+  color: var(--exchange-text-primary);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.currency-rate {
+  font-size: 0.8rem;
+  color: var(--exchange-text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Форма */
+.exchange-form {
+  background: var(--exchange-card-bg);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px var(--exchange-shadow);
+  border: 1px solid var(--exchange-border);
+}
+
+.exchange-form-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--exchange-text-primary);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--exchange-border);
+}
+
+.exchange-form-type {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--exchange-text-primary);
+}
+
+.radio-label input {
+  margin-right: 0.5rem;
+  accent-color: var(--exchange-accent-text);
+}
+
+/* Блок клиента */
+.exchange-client-section {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--exchange-border);
+}
+
+.exchange-client-section .label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--exchange-text-secondary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.client-search-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.client-search-wrapper .client-search {
+  flex: 1;
+}
+
+.new-client-btn {
+  white-space: nowrap;
+  background-color: white;
+  border: 1px solid var(--exchange-accent-text);
+  color: var(--exchange-accent-text);
+}
+
+.new-client-btn:hover {
+  background-color: var(--exchange-accent-light);
+  border-color: var(--exchange-accent-text);
+  color: var(--exchange-accent-text);
+}
+
+/* Группы полей */
+.exchange-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.exchange-form-group {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--exchange-text-secondary);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.exchange-select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--exchange-border);
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.9rem;
+  color: var(--exchange-text-primary);
+  margin-bottom: 0.5rem;
+  transition: border 0.2s;
+}
+
+.exchange-select:focus {
+  outline: none;
+  border-color: var(--exchange-accent-border);
+}
+
+.active-input input {
+  border-color: var(--exchange-accent-text);
+  box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.2);
+}
+
+.readonly-input {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  color: var(--exchange-text-secondary);
+}
+
+.exchange-error {
+  background-color: var(--exchange-danger-light);
+  color: var(--exchange-danger);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  border-left: 3px solid var(--exchange-danger);
+}
+
+button[type="submit"] {
+  background-color: var(--exchange-accent-text);
+  border: none;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+button[type="submit"]:hover {
+  background-color: #14532d;
+}
+
+/* Адаптив */
+@media (max-width: 900px) {
+  .exchange-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .rates-sidebar {
+    order: 2;
+  }
+
+  .exchange-form {
+    order: 1;
+  }
+
+  .exchange-form-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .exchange-form-type {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .client-search-wrapper {
+    flex-direction: column;
+  }
+
+  .new-client-btn {
+    width: 100%;
+  }
+}
+
+/* Контейнер компонента поиска клиентов */
+.client-search {
+  position: relative;
+  width: 100%;
+}
+
+/* Поле ввода */
+.client-search input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--exchange-border);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.2s;
+}
+
+.client-search input:focus {
+  outline: none;
+  border-color: var(--exchange-accent-border);
+  box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.1);
+}
+
+/* Выпадающий список результатов */
+.client-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--exchange-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Элемент списка (клиент) */
+.client-search-result-item {
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--exchange-border);
+  transition: background 0.15s;
+}
+
+.client-search-result-item:last-child {
+  border-bottom: none;
+}
+
+/* Hover и focus внутри списка */
+.client-search-result-item:hover,
+.client-search-result-item:focus {
+  background-color: var(--exchange-accent-light);
+  outline: none;
+}
+
+/* Выбранный (активный) элемент при навигации клавиатурой или мышью */
+.client-search-result-item.active {
+  background-color: var(--exchange-accent-light);
+  border-left: 3px solid var(--exchange-accent-text);
+}
+
+/* Отображение выбранного клиента (когда уже выбран) */
+.client-search-selected {
+  background-color: var(--exchange-accent-light);
+  border: 1px solid var(--exchange-accent-border);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.client-search-selected-info {
+  font-size: 0.9rem;
+  color: var(--exchange-text-primary);
+  flex: 1;
+}
+
+.client-search-selected-info strong {
+  color: var(--exchange-accent-text);
+}
+
+/* Кнопка очистки / смены клиента */
+.client-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--exchange-text-secondary);
+  padding: 0 0.25rem;
+  transition: color 0.2s;
+}
+
+.client-search-clear:hover {
+  color: var(--exchange-danger);
+}
+
+/* Состояние, когда список загружается или нет результатов */
+.client-search-empty,
+.client-search-loading {
+  padding: 0.6rem 0.8rem;
+  text-align: center;
+  color: var(--exchange-text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Адаптив для мобильных устройств */
+@media (max-width: 900px) {
+  .client-search-results {
+    max-height: 200px;
+  }
+}

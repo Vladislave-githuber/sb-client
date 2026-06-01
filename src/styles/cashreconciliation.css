@@ -1,0 +1,212 @@
+.reconciliation-page {
+    padding: 1rem;
+  }
+  
+  .reconciliation-page h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .reconciliation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .reconciliation-table th,
+  .reconciliation-table td {
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+    text-align: right;
+  }
+  
+  .reconciliation-table th:first-child,
+  .reconciliation-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  .reconciliation-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+  }
+  
+  .diff-ok {
+    color: #16a34a;
+    font-weight: 500;
+  }
+  
+  .diff-error {
+    color: #dc2626;
+    font-weight: 700;
+    background-color: #fee2e2;
+  }
+  
+  .comment-section {
+    background-color: #fef9c3;
+    border-left: 4px solid #eab308;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+  }
+  
+  .comment-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #854d0e;
+  }
+  
+  .warning-message {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  /* Стили для полей ввода внутри таблицы */
+  .reconciliation-table input {
+    width: 120px;
+    text-align: right;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+  }
+  
+  .reconciliation-table input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .reconciliation-page {
+    padding: 1rem;
+  }
+  
+  /* Сетка 2×2 для карточек валют */
+  .physical-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .physical-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  
+  .currency-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.25rem;
+  }
+  
+  .electronic-value {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+  }
+  
+  .physical-input {
+    margin-bottom: 0.75rem;
+  }
+  
+  .difference {
+    font-weight: 600;
+    text-align: right;
+  }
+  
+  .diff-ok {
+    color: #16a34a;
+  }
+  
+  .diff-error {
+    color: #dc2626;
+    background-color: #fee2e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  
+  .comment-section {
+    background-color: #fef9c3;
+    border-left: 4px solid #eab308;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+  }
+  
+  .warning-message {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-weight: 500;
+  }
+  
+  .history-filters {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  
+  .history-table th,
+  .history-table td {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    text-align: left;
+  }
+  
+  .history-table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .pagination-info {
+    font-size: 0.9rem;
+    color: #4b5563;
+  }
+  
+  .actions {
+    margin: 1.5rem 0;
+  }
