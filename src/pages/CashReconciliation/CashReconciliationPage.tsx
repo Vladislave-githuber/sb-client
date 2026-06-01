@@ -8,7 +8,7 @@ import '../../styles/cashreconciliation.css';
 const PAGE_SIZE = 5; // количество записей истории на странице
 
 const CashReconciliationPage: React.FC = () => {
-  const { currentShift, currentCashier } = useStore();
+  const { currentShift } = useStore();
   const [electronicBalances, setElectronicBalances] = useState<Record<string, number>>({});
   const [physicalBalances, setPhysicalBalances] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
