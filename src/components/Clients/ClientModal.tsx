@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Input } from '../Shared';
 import PassportInput, { type PassportData } from './PassportInput';
 import type { IClient } from '../../types';
-import '../../styles/ClientModal.css';
+import '../../styles/cancelmodal.css';
 
 interface ClientModalProps {
   isOpen: boolean;

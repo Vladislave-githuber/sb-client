@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useClients } from '../../hooks/useClients';
 import { Input } from '../Shared';
 import type { IClient } from '../../types';
-import '../../styles/ClientSearch.css';
+import '../../styles/clientsearch.css';
 
 interface ClientSearchProps {
   onSelect: (client: IClient | null) => void;
