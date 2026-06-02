@@ -352,7 +352,7 @@ const ExchangePage: React.FC = () => {
 
           <div className="exchange-form-row">
             <div className={`exchange-form-group ${activeInput === "from" ? "active-input" : ""}`}>
-              <label className="label">Отдаёте</label>
+              <label className="label">Получено от клиента</label>
               <select
                 value={fromCurrency}
                 onChange={e => setFromCurrency(e.target.value)}
@@ -373,7 +373,7 @@ const ExchangePage: React.FC = () => {
             </div>
 
             <div className={`exchange-form-group ${activeInput === "to" ? "active-input" : ""}`}>
-              <label className="label">Получаете</label>
+              <label className="label">Выдано клиенту</label>
               <select
                 value={toCurrency}
                 onChange={e => setToCurrency(e.target.value)}

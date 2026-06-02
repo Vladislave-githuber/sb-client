@@ -32,7 +32,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/receipts/transaction/${transaction.id}/pdf`,
+        `https://api-sberbank-af152.up.railway.app/receipts/transaction/${transaction.id}/pdf`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/receipts/transaction/${transaction.id}/pdf`,
+        `https://api-sberbank-af152.up.railway.app/receipts/transaction/${transaction.id}/pdf`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
