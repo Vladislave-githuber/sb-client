@@ -36,7 +36,6 @@ const Navbar: React.FC = () => {
       const target = event.target as Node;
       const isInsideReports = reportsDropdownRef.current?.contains(target);
       const isInsideManage = manageDropdownRef.current?.contains(target);
-
       if (!isInsideReports && !isInsideManage) {
         setOpenDropdown(null);
       }
@@ -73,7 +72,7 @@ const Navbar: React.FC = () => {
             </NavLink>
           )}
 
-          {/* Dropdown Отчёты – доступен экономисту */}
+          {/* Отчёты – видны всем */}
           <div className="dropdown" ref={reportsDropdownRef}>
             <button
               className={`nav-link dropdown-toggle ${openDropdown === 'reports' ? 'active' : ''}`}
@@ -105,7 +104,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Dropdown Управление – скрыто для экономиста */}
+          {/* Управление – только для админа и старшего кассира, экономист не видит */}
           {isAdminOrSenior && !isEconomist && (
             <div className="dropdown" ref={manageDropdownRef}>
               <button
