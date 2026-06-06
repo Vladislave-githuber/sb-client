@@ -17,8 +17,21 @@ const Navbar: React.FC = () => {
   const reportsDropdownRef = useRef<HTMLDivElement>(null);
   const manageDropdownRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = currentCashier?.role === 'admin';
-  const isAdminOrSenior = isAdmin || currentCashier?.role === 'senior_cashier';
+  const role = currentCashier?.role;
+  const isAdmin = role === 'admin';
+  const isSenior = role === 'senior_cashier';
+  const isCashier = role === 'cashier';
+  const isEconomist = role === 'economist';
+
+  const isAdminOrSenior = isAdmin || isSenior;
+
+  // Права на операции (обмен, смена)
+  const canExchange = !isEconomist && (isCashier || isAdminOrSenior);
+  const canManageShift = !isEconomist && (isCashier || isAdminOrSenior);
+
+  // Просмотр клиентов и остатков кассы — доступен экономисту, старшему кассиру и админу
+  const canViewClients = isAdminOrSenior || isEconomist;
+  const canViewCashLedger = isAdminOrSenior || isEconomist;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -30,7 +43,7 @@ const Navbar: React.FC = () => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  // Закрытие дропдауна при клике вне любого из них
+  // Закрытие дропдауна при клике вне
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -52,52 +65,83 @@ const Navbar: React.FC = () => {
           <div className="navbar-logo">Касса №152</div>
         </NavLink>
         <div className="navbar-links">
-          <NavLink to={pageConfig.exchange} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+          {/* Главная — всем */}
+          <NavLink to={pageConfig.dashboard} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
             <Home size={20} />
-            <span>Обмен</span>
+            <span>Главная</span>
           </NavLink>
+
+          {/* История — всем */}
           <NavLink to={pageConfig.history} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
             <History size={20} />
             <span>История</span>
           </NavLink>
-          <NavLink to={pageConfig.shift} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            <Clock size={20} />
-            <span>Смена</span>
-          </NavLink>
 
-          {/* Dropdown Отчёты */}
-          <div className="dropdown" ref={reportsDropdownRef}>
-            <button
-              className={`nav-link dropdown-toggle ${openDropdown === 'reports' ? 'active' : ''}`}
-              onClick={() => toggleDropdown('reports')}
-            >
-              <FileText size={20} />
-              <span>Отчёты</span>
-              <ChevronDown size={16} className="dropdown-arrow" />
-            </button>
-            {openDropdown === 'reports' && (
-              <div className="dropdown-menu">
-                <NavLink to={pageConfig.cashReports} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
-                  <Receipt size={16} />
-                  <span>Кассовые отчёты</span>
-                </NavLink>
-                <NavLink to={pageConfig.auditControl} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
-                  <List size={16} />
-                  <span>Аудит и контроль</span>
-                </NavLink>
-                <NavLink to={pageConfig.financialAnalysis} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
-                  <PieChart size={16} />
-                  <span>Финансовый анализ</span>
-                </NavLink>
-                <NavLink to={pageConfig.amlMonitoring} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
-                  <ShieldAlert size={16} />
-                  <span>AML-мониторинг</span>
-                </NavLink>
-              </div>
-            )}
-          </div>
+          {/* Обмен валют — только кассиры, старшие кассиры и админ (не экономист) */}
+          {canExchange && (
+            <NavLink to={pageConfig.exchange} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              <Home size={20} />
+              <span>Обмен</span>
+            </NavLink>
+          )}
 
-          {/* Dropdown Управление */}
+          {/* Смена — только кассиры, старшие кассиры и админ (не экономист) */}
+          {canManageShift && (
+            <NavLink to={pageConfig.shift} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              <Clock size={20} />
+              <span>Смена</span>
+            </NavLink>
+          )}
+
+          {/* Отдельные ссылки для экономиста: Клиенты и Касса (остатки) */}
+          {canViewClients && (
+            <NavLink to={pageConfig.clients} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              <Users size={20} />
+              <span>Клиенты</span>
+            </NavLink>
+          )}
+          {canViewCashLedger && (
+            <NavLink to={pageConfig.cash_ledger} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              <Wallet size={20} />
+              <span>Остатки кассы</span>
+            </NavLink>
+          )}
+
+          {/* Выпадающее меню «Отчёты» — доступно всем, кроме, возможно, кассира? По таблице экономист и старшие видят, кассир — нет. Уточним: кассир не видит отчёты? В исходной таблице кассир не имеет доступа к отчётам, но в реальности кассир может видеть свои отчёты? Оставим для простоты: отчёты видят старший кассир, админ и экономист. Кассиру скроем. */}
+          {(isAdminOrSenior || isEconomist) && (
+            <div className="dropdown" ref={reportsDropdownRef}>
+              <button
+                className={`nav-link dropdown-toggle ${openDropdown === 'reports' ? 'active' : ''}`}
+                onClick={() => toggleDropdown('reports')}
+              >
+                <FileText size={20} />
+                <span>Отчёты</span>
+                <ChevronDown size={16} className="dropdown-arrow" />
+              </button>
+              {openDropdown === 'reports' && (
+                <div className="dropdown-menu">
+                  <NavLink to={pageConfig.cashReports} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
+                    <Receipt size={16} />
+                    <span>Кассовые отчёты</span>
+                  </NavLink>
+                  <NavLink to={pageConfig.auditControl} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
+                    <List size={16} />
+                    <span>Аудит и контроль</span>
+                  </NavLink>
+                  <NavLink to={pageConfig.financialAnalysis} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
+                    <PieChart size={16} />
+                    <span>Финансовый анализ</span>
+                  </NavLink>
+                  <NavLink to={pageConfig.amlMonitoring} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
+                    <ShieldAlert size={16} />
+                    <span>AML-мониторинг</span>
+                  </NavLink>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Выпадающее меню «Управление» — только для администратора и старшего кассира (экономист не видит) */}
           {isAdminOrSenior && (
             <div className="dropdown" ref={manageDropdownRef}>
               <button
@@ -110,6 +154,7 @@ const Navbar: React.FC = () => {
               </button>
               {openDropdown === 'manage' && (
                 <div className="dropdown-menu">
+                  {/* Клиенты уже вынесены отдельно для экономиста, но для админа/старшего они здесь тоже могут быть, чтобы не дублировать. Уберём, чтобы избежать дублей, или оставим как есть. Оставим, так как старший кассир имеет полный доступ к клиентам */}
                   <NavLink to={pageConfig.clients} className="dropdown-item" onClick={() => setOpenDropdown(null)}>
                     <Users size={16} />
                     <span>Клиенты</span>
