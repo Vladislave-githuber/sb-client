@@ -20,6 +20,8 @@ import CashReportsPage from './pages/CashReportsPage/CashReportsPage';
 import AuditControlPage from './pages/AuditControlPage/AuditControlPage';
 import FinancialAnalysisPage from './pages/FinancialAnalysisPage/FinancialAnalysisPage';
 import AmlMonitoringPage from './pages/AmlMonitoringPage/AmlMonitoringPage';
+import { getMe } from './api/auth';
+import toast from 'react-hot-toast';
 
 const ProtectedLayout: React.FC = () => {
   const currentCashier = useStore((state) => state.currentCashier);
@@ -35,25 +37,35 @@ const ProtectedLayout: React.FC = () => {
 };
 
 function App() {
-  const { setCurrentCashier } = useStore();
+  const { setCurrentCashier, clearCurrentCashier } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Восстанавливаем сессию из localStorage
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (token && savedUser) {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const user = JSON.parse(savedUser);
+        const user = await getMe();
         setCurrentCashier(user);
-      } catch (e) {
-        // Если данные повреждены – чистим хранилище
+        // Сохраняем пользователя в localStorage для синхронизации (опционально)
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch (err) {
+        // Токен невалиден или истёк
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        clearCurrentCashier();
+        toast.error('Сессия истекла, войдите снова');
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
-  }, [setCurrentCashier]);
+    };
+
+    verifyToken();
+  }, [setCurrentCashier, clearCurrentCashier]);
 
   if (isLoading) {
     return <Loader />;

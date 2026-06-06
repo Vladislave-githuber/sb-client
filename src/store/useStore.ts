@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type { IUser, ICashBalance } from "../types";
 import { getCashBalances } from "../api/cashbox";
 
-// Определяем тип смены прямо здесь, чтобы не зависеть от циклических импортов
 export interface ShiftInfo {
   id: string;
   cashierId: string;
@@ -19,6 +18,7 @@ interface AppState {
   loadingBalances: boolean;
   errorBalances: string | null;
   setCurrentCashier: (user: IUser | null) => void;
+  clearCurrentCashier: () => void; // ← новый метод
   setCurrentShift: (shift: ShiftInfo | null) => void;
   updateCashBalance: (currencyCode: string, amount: number) => void;
   fetchCashBalances: () => Promise<void>;
@@ -32,6 +32,7 @@ export const useStore = create<AppState>((set, _get) => ({
   loadingBalances: false,
   errorBalances: null,
   setCurrentCashier: (user) => set({ currentCashier: user }),
+  clearCurrentCashier: () => set({ currentCashier: null }), // ← реализация
   setCurrentShift: (shift) => set({ currentShift: shift }),
   updateCashBalance: (currencyCode, amount) =>
     set((state) => ({
