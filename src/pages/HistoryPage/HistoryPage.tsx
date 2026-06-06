@@ -29,6 +29,7 @@ const getStatusLabel = (status?: string): string => {
 const HistoryPage: React.FC = () => {
   const { currentCashier } = useStore();
   const isAdmin = currentCashier?.role === 'admin';
+  const isEconomist = currentCashier?.role === 'economist';
 
   // Данные
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
@@ -349,7 +350,7 @@ const HistoryPage: React.FC = () => {
                 <td className={`status-${(tx.status || 'ACTIVE').toLowerCase()}`}>
                   {getStatusLabel(tx.status)}
                 </td>
-                {isAdmin && (
+                {isAdmin && !isEconomist && (
                   <td className="actions-cell">
                     {tx.status === 'ACTIVE' && (
                       <>

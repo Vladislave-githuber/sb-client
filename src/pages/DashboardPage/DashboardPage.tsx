@@ -17,7 +17,6 @@ const DashboardPage: React.FC = () => {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loadingTx, setLoadingTx] = useState(true);
 
-  // Данные для панели контроля (только для admin/senior_cashier)
   const [_suspiciousCount, setSuspiciousCount] = useState<number>(0);
   const [pendingApprovals, setPendingApprovals] = useState<number>(0);
   const [discrepancies, setDiscrepancies] = useState<{ count: number; totalDifference: number }>({
@@ -28,23 +27,19 @@ const DashboardPage: React.FC = () => {
 
   const isAdminOrSenior = currentCashier?.role === 'admin' || currentCashier?.role === 'senior_cashier';
 
-  // Загрузка данных для панели контроля
   const fetchControlData = async () => {
     if (!isAdminOrSenior) return;
     setControlLoading(true);
     try {
-      // 1. Подозрительные операции за сегодня
       const today = new Date().toISOString().slice(0, 10);
       const suspiciousRes = await api.get('/reports/suspicious', {
         params: { startDate: today, endDate: today },
       });
       setSuspiciousCount(suspiciousRes.data.transactions?.length || 0);
 
-      // 2. Ожидающие подтверждения
       const pendingRes = await api.get('/approvals/pending');
       setPendingApprovals(pendingRes.data.length);
 
-      // 3. Расхождения кассы за текущую смену (если есть)
       const recRes = await api.get('/cash-ledger/reconciliations');
       if (recRes.data.length) {
         const totalDiff = recRes.data.reduce((sum: number, rec: any) => sum + Math.abs(rec.difference), 0);
@@ -85,7 +80,6 @@ const DashboardPage: React.FC = () => {
     loadTransactions();
   }, [currentCashier]);
 
-  // Обновление времени и панели контроля
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -93,7 +87,7 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchControlData();
-    const interval = setInterval(fetchControlData, 30000); // обновление каждые 30 секунд
+    const interval = setInterval(fetchControlData, 30000);
     return () => clearInterval(interval);
   }, [currentCashier]);
 
@@ -103,8 +97,11 @@ const DashboardPage: React.FC = () => {
   if (ratesLoading || loadingBalances || loadingTx) return <Loader />;
   if (ratesError || errorBalances) return <p className="error-message">{ratesError || errorBalances}</p>;
 
-  const roleLabel = currentCashier?.role === 'admin' ? 'Администратор' : 
-                    currentCashier?.role === 'senior_cashier' ? 'Старший кассир' : 'Кассир';
+  // Определяем подпись роли
+  let roleLabel = 'Кассир';
+  if (currentCashier?.role === 'admin') roleLabel = 'Администратор';
+  else if (currentCashier?.role === 'senior_cashier') roleLabel = 'Старший кассир';
+  else if (currentCashier?.role === 'economist') roleLabel = 'Экономист';
 
   return (
     <div className="container dashboard">
@@ -115,7 +112,6 @@ const DashboardPage: React.FC = () => {
         <p><strong>Дата / время:</strong> {currentTime.toLocaleString()}</p>
       </div>
 
-      {/* Блок статистики операций */}
       <div className="dashboard-stats-grid">
         <div className="stat-card">
           <h3>Операций за смену</h3>
@@ -127,7 +123,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Панель контроля для администратора/старшего кассира */}
+      {/* Панель контроля только для админа/старшего кассира (экономист не видит) */}
       {isAdminOrSenior && (
         <div className="dashboard-control-panel">
           <h2>Панель контроля</h2>
@@ -150,7 +146,7 @@ const DashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* Остатки в кассе */}
+      {/* Остатки в кассе – видит экономист */}
       <div className="dashboard-section">
         <h2>Остатки в кассе</h2>
         <table className="balances-table">
@@ -168,7 +164,7 @@ const DashboardPage: React.FC = () => {
         </table>
       </div>
 
-      {/* Курсы валют */}
+      {/* Курсы валют – видит экономист */}
       <div className="dashboard-section">
         <h2>Текущие курсы валют</h2>
         <div className="rates-list">
