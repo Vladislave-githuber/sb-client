@@ -29,7 +29,7 @@ export interface IUser {
   id: string;
   fullName: string;
   tabNumber: string;
-  role: "cashier" | "admin" | "senior_cashier";
+  role: "cashier" | "admin" | "senior_cashier" | "economist";
 }
 
 export interface ControlTapeItem {
