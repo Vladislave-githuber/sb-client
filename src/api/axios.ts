@@ -28,8 +28,24 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    const status = error.response?.status;
     const message = error.response?.data?.message || "Ошибка сети";
-    toast.error(message);
+
+    // При 401 (Unauthorized) – токен истёк или невалиден
+    if (status === 401) {
+      const url = error.config?.url || "";
+      // Не выполняем редирект для эндпоинтов логина и проверки токена,
+      // чтобы избежать циклического редиректа
+      if (!url.includes("/auth/login") && !url.includes("/auth/me")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        toast.error("Сессия истекла. Войдите заново.");
+        window.location.href = "/login";
+      }
+    } else {
+      toast.error(message);
+    }
+
     return Promise.reject(error);
   }
 );
