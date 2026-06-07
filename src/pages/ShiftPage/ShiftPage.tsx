@@ -10,7 +10,12 @@ const ShiftPage: React.FC = () => {
   const { currentShift, setCurrentShift, currentCashier } = useStore();
   const [actionLoading, setActionLoading] = useState(false);
 
+  const isAdmin = currentCashier?.role === 'admin';
+  const isSenior = currentCashier?.role === 'senior_cashier';
+  const canManageShift = isAdmin || isSenior; // только старший и админ
+
   const refreshShift = async () => {
+    if (!canManageShift) return; // нет прав – не обновляем
     try {
       const shift = await getCurrentShift();
       setCurrentShift(shift);
@@ -20,12 +25,14 @@ const ShiftPage: React.FC = () => {
     }
   };
 
-  // Загружаем смену при монтировании компонента
   useEffect(() => {
-    refreshShift();
-  }, []);
+    if (canManageShift) {
+      refreshShift();
+    }
+  }, [canManageShift]);
 
   const handleStartShift = async () => {
+    if (!canManageShift) return;
     setActionLoading(true);
     try {
       await startShift();
@@ -39,6 +46,7 @@ const ShiftPage: React.FC = () => {
   };
 
   const handleEndShift = async () => {
+    if (!canManageShift) return;
     setActionLoading(true);
     try {
       await endShift();
@@ -51,21 +59,33 @@ const ShiftPage: React.FC = () => {
     }
   };
 
-  const isAdmin = currentCashier?.role === 'admin';
-  const isOpen = currentShift?.status === 'OPEN';
-  const isBlocked = currentShift?.status === 'BLOCKED';
-
   const getSafeNumber = (value: number | string | undefined): number => {
     if (value === undefined) return 0;
     const num = typeof value === 'string' ? parseFloat(value) : value;
     return isNaN(num) ? 0 : num;
   };
 
-  // Показываем загрузку, пока смена не загружена
+  // Если нет прав – показываем запрет доступа
+  if (!canManageShift) {
+    return (
+      <div className="container shift-page">
+        <h1>Управление сменой</h1>
+        <div className="shift-card shift-closed">
+          <div className="shift-status-badge closed">Доступ запрещён</div>
+          <p className="shift-description">
+            Только старший кассир или администратор могут управлять сменой.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Загрузка
   if (currentShift === undefined) {
     return <div className="container shift-page">Загрузка...</div>;
   }
 
+  // Нет открытой смены
   if (!currentShift) {
     return (
       <div className="container shift-page">
@@ -82,6 +102,9 @@ const ShiftPage: React.FC = () => {
       </div>
     );
   }
+
+  const isOpen = currentShift.status === 'OPEN';
+  const isBlocked = currentShift.status === 'BLOCKED';
 
   return (
     <div className="container shift-page">

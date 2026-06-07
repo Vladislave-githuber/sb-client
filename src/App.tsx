@@ -115,7 +115,7 @@ function App() {
             </RoleBasedRoute>
           } />
           <Route path={pageConfig.shift} element={
-            <RoleBasedRoute allowedRoles={['cashier', 'senior_cashier', 'admin']}>
+            <RoleBasedRoute allowedRoles={['senior_cashier', 'admin']}>
               <ShiftPage />
             </RoleBasedRoute>
           } />
