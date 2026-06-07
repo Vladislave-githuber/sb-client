@@ -12,6 +12,10 @@ import '../../styles/reports.css';
 const ReportsPage: React.FC = () => {
   const { currentCashier } = useStore();
   const isAdmin = currentCashier?.role === 'admin';
+  const isEconomist = currentCashier?.role === 'economist';
+  
+  // Экономист видит отчёты как администратор (все данные)
+  const canViewFullReports = isAdmin || isEconomist || currentCashier?.role === 'senior_cashier';
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -25,16 +29,16 @@ const ReportsPage: React.FC = () => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (canViewFullReports) {
       getUsers().then(setUsers).catch(console.error);
     }
-  }, [isAdmin]);
+  }, [canViewFullReports]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isAdmin) {
+      if (canViewFullReports) {
         const data = await getAdminReport(startDate, endDate, selectedCashierId || undefined);
         setReportData(data);
       } else {
@@ -52,7 +56,7 @@ const ReportsPage: React.FC = () => {
     const params: any = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
-    if (isAdmin && selectedCashierId) params.cashierId = selectedCashierId;
+    if (canViewFullReports && selectedCashierId) params.cashierId = selectedCashierId;
     exportPdf(params);
   };
 
@@ -95,7 +99,7 @@ const ReportsPage: React.FC = () => {
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
-        {isAdmin && (
+        {canViewFullReports && (
           <Select
             value={selectedCashierId}
             onChange={(e) => setSelectedCashierId(e.target.value)}
@@ -109,7 +113,9 @@ const ReportsPage: React.FC = () => {
         {reportData && (
           <div className="export-buttons">
             <Button type="button" variant="secondary" onClick={handleExportPdf}>Экспорт PDF</Button>
-            {isAdmin && <Button type="button" variant="secondary" onClick={handleExportExcel}>Экспорт Excel</Button>}
+            {canViewFullReports && (
+              <Button type="button" variant="secondary" onClick={handleExportExcel}>Экспорт Excel</Button>
+            )}
           </div>
         )}
       </form>
@@ -119,7 +125,7 @@ const ReportsPage: React.FC = () => {
           <div className="report-summary">
             <h2>Итоги за период</h2>
             <p>Период: {new Date(reportData.period.from).toLocaleDateString()} - {new Date(reportData.period.to).toLocaleDateString()}</p>
-            {!isAdmin && (reportData as CashierReportData).cashierName && (
+            {!canViewFullReports && (reportData as CashierReportData).cashierName && (
               <p>Кассир: {(reportData as CashierReportData).cashierName}</p>
             )}
             <div className="summary-stats">
@@ -131,7 +137,7 @@ const ReportsPage: React.FC = () => {
             </div>
           </div>
 
-          {isAdmin && (reportData as AdminReportData).byCashier && (
+          {canViewFullReports && (reportData as AdminReportData).byCashier && (
             <div className="cashier-stats">
               <h3>Статистика по кассирам</h3>
               <table className="cashier-table">
