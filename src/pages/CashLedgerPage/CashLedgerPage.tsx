@@ -5,56 +5,53 @@ import Loader from '../../components/Shared/Loader';
 import '../../styles/cashledger.css';
 
 const CashLedgerPage: React.FC = () => {
-  const { currentShift, setCurrentShift } = useStore();
+  const { setCurrentShift } = useStore(); // обновляем store, но не используем currentShift напрямую
   const [ledger, setLedger] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shift, setShift] = useState<any>(null);
 
-  // Загружаем текущую смену, если её нет в store
   useEffect(() => {
-    const fetchShift = async () => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await api.get('/shifts/current');
-        setCurrentShift(response.data);
+        // 1. Запрашиваем актуальную смену с сервера
+        const shiftResp = await api.get('/shifts/current');
+        const currentShiftData = shiftResp.data;
+        setShift(currentShiftData);
+        setCurrentShift(currentShiftData); // обновляем store для других компонентов
+
+        // 2. Если смена не открыта – не загружаем остатки
+        if (currentShiftData.status !== 'OPEN') {
+          setLedger([]);
+          setLoading(false);
+          return;
+        }
+
+        // 3. Загружаем данные кассы
+        const ledgerResp = await api.get('/cash-ledger/current');
+        setLedger(ledgerResp.data.currencies || []);
       } catch (err: any) {
         if (err.response?.status === 404) {
+          // Смена не найдена (не открыта)
+          setShift(null);
           setCurrentShift(null);
+          setLedger([]);
         } else {
-          console.error('Ошибка загрузки смены:', err);
+          setError(err.response?.data?.message || 'Ошибка загрузки данных кассы');
         }
+      } finally {
+        setLoading(false);
       }
     };
-    if (!currentShift) {
-      fetchShift();
-    }
-  }, [currentShift, setCurrentShift]);
 
-  // Загружаем данные кассы (ledger) после того, как смена известна
-  const fetchLedger = async () => {
-    if (!currentShift) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await api.get('/cash-ledger/current');
-      setLedger(data.currencies || []);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Ошибка загрузки данных кассы');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLedger();
-  }, [currentShift]);
+    loadData();
+  }, [setCurrentShift]);
 
   if (loading) return <Loader />;
   if (error) return <div className="container error-message">{error}</div>;
-  if (!currentShift) {
+  if (!shift || shift.status !== 'OPEN') {
     return (
       <div className="container">
         <h1>Информация по кассе</h1>
@@ -66,7 +63,7 @@ const CashLedgerPage: React.FC = () => {
   return (
     <div className="container cash-ledger-page">
       <h1>Информация по кассе</h1>
-      <p>Смена: {currentShift.id?.slice(0, 8)}</p>
+      <p>Смена: {shift.id?.slice(0, 8)} (статус: {shift.status})</p>
       {ledger.length === 0 ? (
         <p>Нет данных по кассе</p>
       ) : (

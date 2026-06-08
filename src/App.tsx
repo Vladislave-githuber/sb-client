@@ -21,6 +21,7 @@ import AuditControlPage from './pages/AuditControlPage/AuditControlPage';
 import FinancialAnalysisPage from './pages/FinancialAnalysisPage/FinancialAnalysisPage';
 import AmlMonitoringPage from './pages/AmlMonitoringPage/AmlMonitoringPage';
 import type { IUser } from './types';
+import api from './api/axios';
 
 // Компонент для защиты маршрутов по ролям
 const RoleBasedRoute = ({ children, allowedRoles }: { children: JSX.Element; allowedRoles: IUser['role'][] }) => {
@@ -44,7 +45,7 @@ const ProtectedLayout: React.FC = () => {
 };
 
 function App() {
-  const { setCurrentCashier } = useStore();
+  const { setCurrentCashier, setCurrentShift } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,6 +62,18 @@ function App() {
     }
     setIsLoading(false);
   }, [setCurrentCashier]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await api.get('/shifts/current');
+        setCurrentShift(response.data);
+      } catch {
+        setCurrentShift(null);
+      }
+    }, 30000); // каждые 30 секунд
+    return () => clearInterval(interval);
+  }, [setCurrentShift]);
 
   if (isLoading) return <Loader />;
 
