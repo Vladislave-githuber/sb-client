@@ -5,11 +5,31 @@ import Loader from '../../components/Shared/Loader';
 import '../../styles/cashledger.css';
 
 const CashLedgerPage: React.FC = () => {
-  const { currentShift } = useStore();
+  const { currentShift, setCurrentShift } = useStore();
   const [ledger, setLedger] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Загружаем текущую смену, если её нет в store
+  useEffect(() => {
+    const fetchShift = async () => {
+      try {
+        const response = await api.get('/shifts/current');
+        setCurrentShift(response.data);
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setCurrentShift(null);
+        } else {
+          console.error('Ошибка загрузки смены:', err);
+        }
+      }
+    };
+    if (!currentShift) {
+      fetchShift();
+    }
+  }, [currentShift, setCurrentShift]);
+
+  // Загружаем данные кассы (ledger) после того, как смена известна
   const fetchLedger = async () => {
     if (!currentShift) {
       setLoading(false);
