@@ -48,6 +48,12 @@ function App() {
   const { setCurrentCashier, setCurrentShift } = useStore();
   const [isLoading, setIsLoading] = useState(true);
 
+  const { init } = useStore();
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');

@@ -14,7 +14,8 @@ export const getCurrentShift = async (): Promise<ShiftInfo | null> => {
     const { data } = await api.get("/shifts/current");
     return data;
   } catch (err: any) {
-    if (err.response?.status === 404) {
+    // 404 - смена не найдена, 403 - недостаточно прав (с нашими правками не должно быть 403, но на всякий случай)
+    if (err.response?.status === 404 || err.response?.status === 403) {
       return null;
     }
     throw err;

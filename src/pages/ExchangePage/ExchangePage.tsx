@@ -12,6 +12,7 @@ import { useClients } from "../../hooks/useClients";
 import toast from "react-hot-toast";
 import type { IClient } from "../../types";
 import "../../styles/exchange.css";
+import Loader from "../../components/Shared/Loader";
 
 type OperationType = "BUY" | "SELL" | "CONVERT";
 
@@ -59,6 +60,7 @@ const ExchangePage: React.FC = () => {
   const { currentCashier, fetchCashBalances, loadingBalances, errorBalances, cashBalances } = useStore();
   const { rates, loading: ratesLoading, error: ratesError } = useRates();
   const { addClient } = useClients();
+  const { currentShift, loadingShift, fetchCurrentShift } = useStore();
 
   const [type, setType] = useState<OperationType>("BUY");
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
@@ -76,6 +78,20 @@ const ExchangePage: React.FC = () => {
   const [showClientModal, setShowClientModal] = useState(false);
 
   const isAdminOrSenior = currentCashier?.role === 'admin' || currentCashier?.role === 'senior_cashier';
+
+  useEffect(() => {
+    fetchCurrentShift();
+  }, [fetchCurrentShift]);
+  
+  if (loadingShift) return <Loader />;
+  if (!currentShift || currentShift.status !== 'OPEN') {
+    return (
+      <div className="container">
+        <h1>Рабочее место кассира</h1>
+        <p>Смена не открыта. Обратитесь к старшему кассиру.</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (currentCashier) fetchCashBalances();
