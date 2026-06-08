@@ -5,7 +5,7 @@ import Loader from '../../components/Shared/Loader';
 import '../../styles/cashledger.css';
 
 const CashLedgerPage: React.FC = () => {
-  const { setCurrentShift } = useStore(); // обновляем store, но не используем currentShift напрямую
+  const { setCurrentShift } = useStore();
   const [ledger, setLedger] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,28 +16,17 @@ const CashLedgerPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        // 1. Запрашиваем актуальную смену с сервера
         const shiftResp = await api.get('/shifts/current');
-        const currentShiftData = shiftResp.data;
-        setShift(currentShiftData);
-        setCurrentShift(currentShiftData); // обновляем store для других компонентов
+        const shiftData = shiftResp.data;
+        setShift(shiftData);
+        setCurrentShift(shiftData);
 
-        // 2. Если смена не открыта – не загружаем остатки
-        if (currentShiftData.status !== 'OPEN') {
-          setLedger([]);
-          setLoading(false);
-          return;
-        }
-
-        // 3. Загружаем данные кассы
         const ledgerResp = await api.get('/cash-ledger/current');
         setLedger(ledgerResp.data.currencies || []);
       } catch (err: any) {
         if (err.response?.status === 404) {
-          // Смена не найдена (не открыта)
           setShift(null);
           setCurrentShift(null);
-          setLedger([]);
         } else {
           setError(err.response?.data?.message || 'Ошибка загрузки данных кассы');
         }
@@ -45,13 +34,12 @@ const CashLedgerPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadData();
   }, [setCurrentShift]);
 
   if (loading) return <Loader />;
   if (error) return <div className="container error-message">{error}</div>;
-  if (!shift || shift.status !== 'OPEN') {
+  if (!shift) {
     return (
       <div className="container">
         <h1>Информация по кассе</h1>
@@ -60,22 +48,22 @@ const CashLedgerPage: React.FC = () => {
     );
   }
 
+  let statusMessage = '';
+  if (shift.status === 'OPEN') statusMessage = 'Смена открыта';
+  else if (shift.status === 'BLOCKED') statusMessage = 'Смена заблокирована администратором';
+  else statusMessage = `Статус: ${shift.status}`;
+
   return (
     <div className="container cash-ledger-page">
       <h1>Информация по кассе</h1>
-      <p>Смена: {shift.id?.slice(0, 8)} (статус: {shift.status})</p>
+      <p>Смена: {shift.id?.slice(0, 8)}</p>
+      <p className="shift-status">{statusMessage}</p>
       {ledger.length === 0 ? (
         <p>Нет данных по кассе</p>
       ) : (
         <table className="ledger-table">
           <thead>
-            <tr>
-              <th>Валюта</th>
-              <th>Начало смены</th>
-              <th>Приход</th>
-              <th>Расход</th>
-              <th>Остаток</th>
-            </tr>
+            <tr><th>Валюта</th><th>Начало смены</th><th>Приход</th><th>Расход</th><th>Остаток</th></tr>
           </thead>
           <tbody>
             {ledger.map(row => (
