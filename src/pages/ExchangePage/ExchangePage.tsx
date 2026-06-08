@@ -12,7 +12,6 @@ import { useClients } from "../../hooks/useClients";
 import toast from "react-hot-toast";
 import type { IClient } from "../../types";
 import "../../styles/exchange.css";
-import Loader from "../../components/Shared/Loader";
 
 type OperationType = "BUY" | "SELL" | "CONVERT";
 
@@ -57,10 +56,19 @@ const calculateAmount = (
 };
 
 const ExchangePage: React.FC = () => {
-  const { currentCashier, fetchCashBalances, loadingBalances, errorBalances, cashBalances } = useStore();
+  // ========== ВСЕ ХУКИ В НАЧАЛЕ ==========
+  const { 
+    currentCashier, 
+    fetchCashBalances, 
+    loadingBalances, 
+    errorBalances, 
+    cashBalances,
+    currentShift, 
+    loadingShift, 
+    fetchCurrentShift 
+  } = useStore();
   const { rates, loading: ratesLoading, error: ratesError } = useRates();
   const { addClient } = useClients();
-  const { currentShift, loadingShift, fetchCurrentShift } = useStore();
 
   const [type, setType] = useState<OperationType>("BUY");
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
@@ -73,26 +81,17 @@ const ExchangePage: React.FC = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
   const [activeInput, setActiveInput] = useState<"from" | "to">("from");
-
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
 
   const isAdminOrSenior = currentCashier?.role === 'admin' || currentCashier?.role === 'senior_cashier';
 
+  // Загрузка смены
   useEffect(() => {
     fetchCurrentShift();
   }, [fetchCurrentShift]);
-  
-  if (loadingShift) return <Loader />;
-  if (!currentShift || currentShift.status !== 'OPEN') {
-    return (
-      <div className="container">
-        <h1>Рабочее место кассира</h1>
-        <p>Смена не открыта. Обратитесь к старшему кассиру.</p>
-      </div>
-    );
-  }
 
+  // Загрузка балансов
   useEffect(() => {
     if (currentCashier) fetchCashBalances();
   }, [currentCashier, fetchCashBalances]);
@@ -102,20 +101,7 @@ const ExchangePage: React.FC = () => {
     [rates]
   );
 
-  useEffect(() => {
-    if (givenAmount > 0 && fromAmount > 0) {
-      if (givenAmount < fromAmount) {
-        setError(`Внесено меньше требуемой суммы (${fromAmount} ${fromCurrency})`);
-        setChangeAmount(0);
-      } else {
-        setError("");
-        setChangeAmount(givenAmount - fromAmount);
-      }
-    } else {
-      setChangeAmount(0);
-    }
-  }, [givenAmount, fromAmount, fromCurrency]);
-
+  // Пересчёт суммы
   const recalc = useCallback(
     (changedField: "from" | "to", newValue: number) => {
       if (newValue < 0) newValue = 0;
@@ -147,6 +133,52 @@ const ExchangePage: React.FC = () => {
     [type, fromCurrency, toCurrency, rates]
   );
 
+  // Эффект для расчёта сдачи
+  useEffect(() => {
+    if (givenAmount > 0 && fromAmount > 0) {
+      if (givenAmount < fromAmount) {
+        setError(`Внесено меньше требуемой суммы (${fromAmount} ${fromCurrency})`);
+        setChangeAmount(0);
+      } else {
+        setError("");
+        setChangeAmount(givenAmount - fromAmount);
+      }
+    } else {
+      setChangeAmount(0);
+    }
+  }, [givenAmount, fromAmount, fromCurrency]);
+
+  // Эффект для смены валют при переключении типа
+  useEffect(() => {
+    if (type === "BUY") {
+      setFromCurrency("BYN");
+      if (toCurrency === "BYN") setToCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
+    } else if (type === "SELL") {
+      setToCurrency("BYN");
+      if (fromCurrency === "BYN") setFromCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
+    } else if (type === "CONVERT") {
+      if (fromCurrency === toCurrency) {
+        const other = rates.find(c => c.code !== fromCurrency)?.code;
+        if (other) setToCurrency(other);
+      }
+    }
+    setFromAmount(0);
+    setToAmount(0);
+    setGivenAmount(0);
+    setChangeAmount(0);
+    setError("");
+    setSelectedClient(null);
+  }, [type, rates, toCurrency, fromCurrency]);
+
+  // Эффект для синхронизации полей
+  useEffect(() => {
+    if (fromAmount !== 0 || toAmount !== 0) {
+      if (activeInput === "from") recalc("from", fromAmount);
+      else recalc("to", toAmount);
+    }
+  }, [fromCurrency, toCurrency, recalc, activeInput, fromAmount, toAmount]);
+
+  // Обработчики
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     const newVal = isNaN(val) ? 0 : val;
@@ -167,34 +199,6 @@ const ExchangePage: React.FC = () => {
     const val = parseFloat(e.target.value);
     setGivenAmount(isNaN(val) ? 0 : val);
   };
-
-  useEffect(() => {
-    if (type === "BUY") {
-      setFromCurrency("BYN");
-      if (toCurrency === "BYN") setToCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
-    } else if (type === "SELL") {
-      setToCurrency("BYN");
-      if (fromCurrency === "BYN") setFromCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
-    } else if (type === "CONVERT") {
-      if (fromCurrency === toCurrency) {
-        const other = rates.find(c => c.code !== fromCurrency)?.code;
-        if (other) setToCurrency(other);
-      }
-    }
-    setFromAmount(0);
-    setToAmount(0);
-    setGivenAmount(0);
-    setChangeAmount(0);
-    setError("");
-    setSelectedClient(null);
-  }, [type, rates]);
-
-  useEffect(() => {
-    if (fromAmount !== 0 || toAmount !== 0) {
-      if (activeInput === "from") recalc("from", fromAmount);
-      else recalc("to", toAmount);
-    }
-  }, [fromCurrency, toCurrency, recalc, activeInput, fromAmount, toAmount]);
 
   const checkCashAvailability = (): boolean => {
     if (!cashBalances.length) return true;
@@ -292,17 +296,31 @@ const ExchangePage: React.FC = () => {
     setShowClientModal(false);
   };
 
-  if (ratesLoading || loadingBalances) return (
-    <div className="container">
-      <div className="loader-wrapper">Загрузка...</div>
-    </div>
-  );
-  if (ratesError || errorBalances) return (
-    <div className="container">
-      <p className="error-message">{ratesError || errorBalances}</p>
-    </div>
-  );
+  // ========== УСЛОВНЫЕ ВОЗВРАТЫ (ТОЛЬКО ПОСЛЕ ВСЕХ ХУКОВ) ==========
+  if (ratesLoading || loadingBalances || loadingShift) {
+    return (
+      <div className="container">
+        <div className="loader-wrapper">Загрузка...</div>
+      </div>
+    );
+  }
+  if (ratesError || errorBalances) {
+    return (
+      <div className="container">
+        <p className="error-message">{ratesError || errorBalances}</p>
+      </div>
+    );
+  }
+  if (!currentShift || currentShift.status !== 'OPEN') {
+    return (
+      <div className="container">
+        <h1>Рабочее место кассира</h1>
+        <p>Смена не открыта. Обратитесь к старшему кассиру.</p>
+      </div>
+    );
+  }
 
+  // ========== ОСНОВНОЙ РЕНДЕР ==========
   const isFromFixed = type === "BUY";
   const isToFixed = type === "SELL";
   const fromDisabled = isFromFixed && fromCurrency === "BYN";
