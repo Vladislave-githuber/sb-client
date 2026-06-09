@@ -27,11 +27,19 @@ const Navbar: React.FC = () => {
 
   // Права доступа
   const canExchange = (isCashier || isAdminOrSenior) && !isEconomist;
-  const canManageShift = isAdminOrSenior;
-  const canViewClients = isAdmin || isSenior || isCashier || isEconomist; // все, кроме гостей
-  const canViewCashBalances = isCashier || isAdminOrSenior || isEconomist;
   const canViewReports = isAdminOrSenior || isEconomist;
-  const canManage = isAdminOrSenior; // управление (сверка, лимиты, логи и т.д.)
+  // Управление (dropdown) видят все, кроме экономиста? экономист тоже может видеть клиентов и остатки
+  const canViewManage = isAdmin || isSenior || isCashier || isEconomist;
+
+  // Пункты внутри управления
+  const showClients = isAdmin || isSenior || isCashier || isEconomist;
+  const showCashBalances = isAdmin || isSenior || isCashier || isEconomist;
+  const showShift = isAdminOrSenior; // только админ и старший
+  const showCashReconciliation = isAdminOrSenior;
+  const showApprovals = isAdminOrSenior;
+  const showLimits = isAdmin;
+  const showAdminCashLimits = isAdmin;
+  const showLogs = isAdmin;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -83,39 +91,6 @@ const Navbar: React.FC = () => {
             <span>История</span>
           </NavLink>
 
-          {/* Остатки кассы – все */}
-          {canViewCashBalances && (
-            <NavLink
-              to={pageConfig.cash_ledger}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              <Wallet size={20} />
-              <span>Остатки кассы</span>
-            </NavLink>
-          )}
-
-          {/* Смена – только старший и админ */}
-          {canManageShift && (
-            <NavLink
-              to={pageConfig.shift}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              <Clock size={20} />
-              <span>Смена</span>
-            </NavLink>
-          )}
-
-          {/* Клиенты – для всех (админ, старший, кассир, экономист) */}
-          {canViewClients && (
-            <NavLink
-              to={pageConfig.clients}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              <Users size={20} />
-              <span>Клиенты</span>
-            </NavLink>
-          )}
-
           {/* Отчёты – только старший, админ, экономист */}
           {canViewReports && (
             <div className="dropdown" ref={reportsDropdownRef}>
@@ -166,8 +141,8 @@ const Navbar: React.FC = () => {
             </div>
           )}
 
-          {/* Управление – только старший и админ (без Клиентов, они уже в основном меню) */}
-          {canManage && (
+          {/* Управление – видят все (админ, старший, кассир, экономист) */}
+          {canViewManage && (
             <div className="dropdown" ref={manageDropdownRef}>
               <button
                 className={`nav-link dropdown-toggle ${openDropdown === 'manage' ? 'active' : ''}`}
@@ -179,15 +154,57 @@ const Navbar: React.FC = () => {
               </button>
               {openDropdown === 'manage' && (
                 <div className="dropdown-menu">
-                  <NavLink
-                    to={pageConfig.cash_reconciliation}
-                    className="dropdown-item"
-                    onClick={() => setOpenDropdown(null)}
-                  >
-                    <Wallet size={16} />
-                    <span>Сверка кассы</span>
-                  </NavLink>
-                  {isAdmin && (
+                  {showClients && (
+                    <NavLink
+                      to={pageConfig.clients}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Users size={16} />
+                      <span>Клиенты</span>
+                    </NavLink>
+                  )}
+                  {showCashBalances && (
+                    <NavLink
+                      to={pageConfig.cash_ledger}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Wallet size={16} />
+                      <span>Остатки кассы</span>
+                    </NavLink>
+                  )}
+                  {showShift && (
+                    <NavLink
+                      to={pageConfig.shift}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Clock size={16} />
+                      <span>Смена</span>
+                    </NavLink>
+                  )}
+                  {showCashReconciliation && (
+                    <NavLink
+                      to={pageConfig.cash_reconciliation}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Wallet size={16} />
+                      <span>Сверка кассы</span>
+                    </NavLink>
+                  )}
+                  {showApprovals && (
+                    <NavLink
+                      to={pageConfig.approvals}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <CheckCircle size={16} />
+                      <span>Подтверждения</span>
+                    </NavLink>
+                  )}
+                  {showLimits && (
                     <NavLink
                       to={pageConfig.limits}
                       className="dropdown-item"
@@ -197,33 +214,25 @@ const Navbar: React.FC = () => {
                       <span>Лимиты операций</span>
                     </NavLink>
                   )}
-                  <NavLink
-                    to={pageConfig.approvals}
-                    className="dropdown-item"
-                    onClick={() => setOpenDropdown(null)}
-                  >
-                    <CheckCircle size={16} />
-                    <span>Подтверждения</span>
-                  </NavLink>
-                  {isAdmin && (
-                    <>
-                      <NavLink
-                        to={pageConfig.admin}
-                        className="dropdown-item"
-                        onClick={() => setOpenDropdown(null)}
-                      >
-                        <Settings size={16} />
-                        <span>Лимиты кассы</span>
-                      </NavLink>
-                      <NavLink
-                        to={pageConfig.logs}
-                        className="dropdown-item"
-                        onClick={() => setOpenDropdown(null)}
-                      >
-                        <List size={16} />
-                        <span>Логи</span>
-                      </NavLink>
-                    </>
+                  {showAdminCashLimits && (
+                    <NavLink
+                      to={pageConfig.admin}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Settings size={16} />
+                      <span>Лимиты кассы</span>
+                    </NavLink>
+                  )}
+                  {showLogs && (
+                    <NavLink
+                      to={pageConfig.logs}
+                      className="dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <List size={16} />
+                      <span>Логи</span>
+                    </NavLink>
                   )}
                 </div>
               )}
