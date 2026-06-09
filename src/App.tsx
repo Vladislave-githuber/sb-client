@@ -92,7 +92,7 @@ function App() {
           <Route path={pageConfig.dashboard} element={<DashboardPage />} />
           <Route path={pageConfig.history} element={<HistoryPage />} />
           <Route path={pageConfig.clients} element={
-            <RoleBasedRoute allowedRoles={['admin', 'senior_cashier', 'economist']}>
+            <RoleBasedRoute allowedRoles={['admin', 'senior_cashier', 'cashier', 'economist']}>
               <ClientsPage />
             </RoleBasedRoute>
           } />
