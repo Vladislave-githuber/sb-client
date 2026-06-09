@@ -29,7 +29,16 @@ const getStatusLabel = (status?: string): string => {
 const HistoryPage: React.FC = () => {
   const { currentCashier } = useStore();
   const isAdmin = currentCashier?.role === 'admin';
+  const isSeniorCashier = currentCashier?.role === 'senior_cashier';
   const isEconomist = currentCashier?.role === 'economist';
+  const isCashier = currentCashier?.role === 'cashier';
+
+  // Может ли пользователь видеть всех кассиров (для фильтрации и отображения имён)
+  const canViewAllUsers = isAdmin || isSeniorCashier || isEconomist;
+  // Может ли пользователь выполнять удаление (только админ)
+  const canDelete = isAdmin;
+  // Может ли выполнять сторно/возврат (админ или старший кассир)
+  const canCancel = isAdmin || isSeniorCashier;
 
   // Данные
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
@@ -40,12 +49,11 @@ const HistoryPage: React.FC = () => {
   const [loadingCancel, setLoadingCancel] = useState<string | null>(null);
 
   // Фильтры
-  const [searchId, _setSearchId] = useState('');
   const [typeFilter, setTypeFilter] = useState<OperationType>('ALL');
   const [currencyFilter, setCurrencyFilter] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [cashierFilter, setCashierFilter] = useState('ALL');
+  const [cashierFilter, setCashierFilter] = useState('ALL'); // Фильтр по кассиру (доступен админу, экон., старш.кассиру)
 
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,14 +83,16 @@ const HistoryPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [txs, usersData, ratesData] = await Promise.all([
-          getTransactions(),
-          isAdmin ? getUsers() : Promise.resolve([]),
-          getRates(),
-        ]);
+        const promises: Promise<any>[] = [getTransactions(), getRates()];
+        if (canViewAllUsers) {
+          promises.push(getUsers());
+        } else {
+          promises.push(Promise.resolve([]));
+        }
+        const [txs, ratesData, usersData] = await Promise.all(promises);
         setTransactions(txs);
-        if (isAdmin) setUsers(usersData);
         setRates(ratesData);
+        if (canViewAllUsers) setUsers(usersData || []);
       } catch (err) {
         toast.error('Ошибка загрузки данных');
         console.error(err);
@@ -91,15 +101,11 @@ const HistoryPage: React.FC = () => {
       }
     };
     fetchData();
-  }, [isAdmin]);
+  }, [canViewAllUsers]);
 
   // Фильтрация транзакций
   const filteredTransactions = useMemo(() => {
     let filtered = [...transactions];
-
-    if (searchId.trim()) {
-      filtered = filtered.filter((tx) => tx.id.toString().includes(searchId.trim()));
-    }
 
     if (typeFilter !== 'ALL') {
       filtered = filtered.filter((tx) => tx.type === typeFilter);
@@ -122,14 +128,19 @@ const HistoryPage: React.FC = () => {
       filtered = filtered.filter((tx) => new Date(tx.createdAt) <= to);
     }
 
-    if (isAdmin && cashierFilter !== 'ALL') {
+    // Фильтр по кассиру:
+    // - Если доступен просмотр всех пользователей (админ, эконом, старший кассир) и выбран конкретный кассир
+    if (canViewAllUsers && cashierFilter !== 'ALL') {
       filtered = filtered.filter((tx) => tx.cashierId === String(cashierFilter));
-    } else if (!isAdmin && currentCashier) {
+    }
+    // - Если обычный кассир: показываем только его операции
+    else if (isCashier && currentCashier) {
       filtered = filtered.filter((tx) => tx.cashierId === String(currentCashier.id));
     }
+    // Для администратора, экономиста, старшего кассира без фильтра - все операции
 
     return filtered;
-  }, [transactions, searchId, typeFilter, currencyFilter, dateFrom, dateTo, isAdmin, cashierFilter, currentCashier]);
+  }, [transactions, typeFilter, currencyFilter, dateFrom, dateTo, canViewAllUsers, cashierFilter, isCashier, currentCashier]);
 
   // Пагинация
   const totalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
@@ -141,9 +152,9 @@ const HistoryPage: React.FC = () => {
   // Сброс страницы при изменении фильтров
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchId, typeFilter, currencyFilter, dateFrom, dateTo, cashierFilter]);
+  }, [typeFilter, currencyFilter, dateFrom, dateTo, cashierFilter]);
 
-  // Подсчёт статистики (для админа)
+  // Подсчёт статистики (только для админа)
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -175,7 +186,7 @@ const HistoryPage: React.FC = () => {
   }, [filteredTransactions, isAdmin]);
 
   const handleDelete = async (id: string) => {
-    if (!isAdmin) return;
+    if (!canDelete) return;
     if (!window.confirm('Вы уверены, что хотите удалить эту операцию?')) return;
 
     try {
@@ -185,6 +196,7 @@ const HistoryPage: React.FC = () => {
       toast.success('Операция удалена');
     } catch (err) {
       console.error(err);
+      toast.error('Ошибка при удалении');
     } finally {
       setLoadingDelete(null);
     }
@@ -220,11 +232,15 @@ const HistoryPage: React.FC = () => {
     }
   };
 
+  // Имя кассира: используем cashierName с бэкенда, если есть, иначе подставляем ID
   const getCashierName = (tx: ITransaction) => {
     if (tx.cashierName) return tx.cashierName;
-    if (!isAdmin) return currentCashier?.fullName || '—';
-    const user = users.find(u => String(u.id) === tx.cashierId);
-    return user ? user.fullName : `Кассир №${tx.cashierId}`;
+    // fallback для старых данных
+    if (canViewAllUsers) {
+      const user = users.find(u => String(u.id) === tx.cashierId);
+      if (user) return user.fullName;
+    }
+    return `Кассир ${tx.cashierId.slice(0, 8)}`;
   };
 
   const handleViewReceipt = async (transactionId: string) => {
@@ -244,7 +260,6 @@ const HistoryPage: React.FC = () => {
       <h1 className="history-page-title">История операций</h1>
 
       <div className="filters-bar">
-
         <Select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as OperationType)}
@@ -280,7 +295,7 @@ const HistoryPage: React.FC = () => {
           />
         </div>
 
-        {isAdmin && (
+        {canViewAllUsers && (
           <Select
             value={cashierFilter}
             onChange={(e) => setCashierFilter(e.target.value)}
@@ -327,7 +342,7 @@ const HistoryPage: React.FC = () => {
               <th>Получено</th>
               <th>Кассир</th>
               <th>Статус</th>
-              {isAdmin && <th>Действия</th>}
+              {canDelete && <th>Действия</th>}
               <th>Чек</th>
             </tr>
           </thead>
@@ -342,9 +357,9 @@ const HistoryPage: React.FC = () => {
                 <td className={`status-${(tx.status || 'ACTIVE').toLowerCase()}`}>
                   {getStatusLabel(tx.status)}
                 </td>
-                {isAdmin && !isEconomist && (
+                {canDelete && (
                   <td className="actions-cell">
-                    {tx.status === 'ACTIVE' && (
+                    {tx.status === 'ACTIVE' && canCancel && (
                       <>
                         <Button
                           variant="warning"
@@ -383,7 +398,7 @@ const HistoryPage: React.FC = () => {
             ))}
             {paginatedTransactions.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 9 : 8} className="no-data">
+                <td colSpan={canDelete ? 8 : 7} className="no-data">
                   Нет операций по заданным фильтрам
                 </td>
               </tr>
