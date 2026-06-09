@@ -50,6 +50,16 @@ const translateSystemAction = (action: string): string => systemActionLabels[act
 const translateResult = (result: string): string => resultLabels[result] || result;
 const translateStatus = (status: string): string => statusLabels[status] || status;
 
+// Определение CSS-класса для бейджа статуса (аналогично history.css)
+const getStatusClass = (status: string): string => {
+  const upperStatus = status?.toUpperCase() || '';
+  if (upperStatus === 'ACTIVE' || upperStatus === 'COMPLETED') return 'status-active';
+  if (upperStatus === 'STORNO') return 'status-storno';
+  if (upperStatus === 'REFUNDED') return 'status-refunded';
+  if (upperStatus === 'CANCELLED' || upperStatus === 'CANCEL') return 'status-storno';
+  return 'status-active';
+};
+
 const AuditControlPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AuditSubReport>('controlTape');
   const [startDate, setStartDate] = useState('');
@@ -140,7 +150,11 @@ const AuditControlPage: React.FC = () => {
                 <td>{safeNumber(item.amountOut).toFixed(2)} {item.currencyOut}</td>
                 <td>{item.paymentType === 'CASH' ? 'Наличные' : 'Безналичные'}</td>
                 <td>{item.cashierName || '—'}</td>
-                <td>{translateStatus(item.status)}</td>
+                <td>
+                  <span className={getStatusClass(item.status)}>
+                    {translateStatus(item.status)}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -161,7 +175,9 @@ const AuditControlPage: React.FC = () => {
                 <td>{new Date(log.createdAt).toLocaleString()}</td>
                 <td>{log.userFullName || '—'}</td>
                 <td>{translateSystemAction(log.action)}</td>
-                <td className={`log-result log-result-${log.result?.toLowerCase() || 'unknown'}`}>{translateResult(log.result)}</td>
+                <td className={`log-result log-result-${log.result?.toLowerCase() || 'unknown'}`}>
+                  {translateResult(log.result)}
+                </td>
                 <td>{log.ipAddress || '—'}</td>
                 <td>{log.details || '—'}</td>
               </tr>
