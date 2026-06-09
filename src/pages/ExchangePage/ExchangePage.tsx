@@ -83,7 +83,10 @@ const ExchangePage: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
 
-  const isAdminOrSenior = currentCashier?.role === 'admin' || currentCashier?.role === 'senior_cashier';
+  // Право на создание нового клиента: админ, старший кассир или обычный кассир
+  const canCreateClient = currentCashier?.role === 'admin' || 
+                          currentCashier?.role === 'senior_cashier' || 
+                          currentCashier?.role === 'cashier';
 
   // Загрузка смены
   useEffect(() => {
@@ -370,7 +373,7 @@ const ExchangePage: React.FC = () => {
                 onSelect={setSelectedClient} 
                 selectedClient={selectedClient}
               />
-              {isAdminOrSenior && (
+              {canCreateClient && (
                 <Button 
                   type="button" 
                   variant="secondary" 
