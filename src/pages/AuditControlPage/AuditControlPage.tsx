@@ -167,7 +167,7 @@ const AuditControlPage: React.FC = () => {
       return (
         <table className="report-table">
           <thead>
-            <tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Результат</th><th>IP</th><th>Детали</th></tr>
+            <tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Результат</th><th>Детали</th></tr>
           </thead>
           <tbody>
             {systemAuditData.map((log, idx) => (

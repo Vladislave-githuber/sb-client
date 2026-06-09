@@ -56,7 +56,6 @@ const calculateAmount = (
 };
 
 const ExchangePage: React.FC = () => {
-  // ========== ВСЕ ХУКИ В НАЧАЛЕ ==========
   const { 
     currentCashier, 
     fetchCashBalances, 
