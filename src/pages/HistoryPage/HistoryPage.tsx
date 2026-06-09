@@ -4,7 +4,7 @@ import { getTransactions, deleteTransaction, stornoTransaction, refundTransactio
 import { getUsers } from '../../api/users';
 import { getRates } from '../../api/rates';
 import { getReceiptByTransactionId, type ReceiptWithDetails } from '../../api/receipts';
-import { Button, Input, Select } from '../../components/Shared';
+import { Button, Select } from '../../components/Shared';
 import Loader from '../../components/Shared/Loader';
 import ReceiptModal from '../../components/ReceiptModal/ReceiptModal';
 import CancelModal from '../../components/CancelModal/CancelModal';
@@ -40,7 +40,7 @@ const HistoryPage: React.FC = () => {
   const [loadingCancel, setLoadingCancel] = useState<string | null>(null);
 
   // Фильтры
-  const [searchId, setSearchId] = useState('');
+  const [searchId, _setSearchId] = useState('');
   const [typeFilter, setTypeFilter] = useState<OperationType>('ALL');
   const [currencyFilter, setCurrencyFilter] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
@@ -244,12 +244,6 @@ const HistoryPage: React.FC = () => {
       <h1 className="history-page-title">История операций</h1>
 
       <div className="filters-bar">
-        <Input
-          placeholder="Номер операции (ID)"
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          className="filter-input"
-        />
 
         <Select
           value={typeFilter}
@@ -327,7 +321,6 @@ const HistoryPage: React.FC = () => {
         <table className="history-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Дата/время</th>
               <th>Тип</th>
               <th>Отдано</th>
@@ -341,7 +334,6 @@ const HistoryPage: React.FC = () => {
           <tbody>
             {paginatedTransactions.map((tx) => (
               <tr key={tx.id}>
-                <td>{tx.id}</td>
                 <td>{new Date(tx.createdAt).toLocaleString()}</td>
                 <td>{tx.type}</td>
                 <td>{tx.sumIn} {tx.currencyIn}</td>
