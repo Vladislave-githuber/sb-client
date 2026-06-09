@@ -178,7 +178,6 @@ const AuditControlPage: React.FC = () => {
                 <td className={`log-result log-result-${log.result?.toLowerCase() || 'unknown'}`}>
                   {translateResult(log.result)}
                 </td>
-                <td>{log.ipAddress || '—'}</td>
                 <td>{log.details || '—'}</td>
               </tr>
             ))}
