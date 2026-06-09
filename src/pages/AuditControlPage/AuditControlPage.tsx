@@ -101,7 +101,7 @@ const AuditControlPage: React.FC = () => {
               <tr key={item.checkNumber || idx}>
                 <td>{item.checkNumber}</td>
                 <td>{new Date(item.date).toLocaleString()}</td>
-                <td>{item.operationType}</td>
+                <td>{item.operationType === 'BUY' ? 'Покупка' : item.operationType === 'SELL' ? 'Продажа' : 'Конверсия'}</td>
                 <td>{safeNumber(item.amountIn).toFixed(2)} {item.currencyIn}</td>
                 <td>{safeNumber(item.amountOut).toFixed(2)} {item.currencyOut}</td>
                 <td>{item.paymentType === 'CASH' ? 'Наличные' : 'Безналичные'}</td>
@@ -167,7 +167,7 @@ const AuditControlPage: React.FC = () => {
         return (
           <div><h3>Операции кассира: {data.cashier?.name}</h3>
             <table className="report-table"><thead><tr><th>Дата</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Клиент</th></tr></thead><tbody>
-              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.type}</td><td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td><td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td><td>{tx.clientName}</td></tr>))}
+              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.type === 'BUY' ? 'Покупка' : tx.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td><td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td><td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td><td>{tx.clientName}</td></tr>))}
             </tbody></table>
           </div>
         );

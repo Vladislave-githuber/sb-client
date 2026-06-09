@@ -78,6 +78,15 @@ const ReportsPage: React.FC = () => {
     }
   };
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'BUY': return 'Покупка';
+      case 'SELL': return 'Продажа';
+      case 'CONVERT': return 'Конверсия';
+      default: return type;
+    }
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -176,7 +185,7 @@ const ReportsPage: React.FC = () => {
                   <tr key={tx.id}>
                     <td>{tx.id}</td>
                     <td>{new Date(tx.createdAt).toLocaleString()}</td>
-                    <td>{tx.type}</td>
+                    <td>{getTypeLabel(tx.type)}</td>
                     <td>{tx.sumIn} {tx.currencyIn}</td>
                     <td>{tx.sumOut} {tx.currencyOut}</td>
                     <td>{tx.cashierName}</td>

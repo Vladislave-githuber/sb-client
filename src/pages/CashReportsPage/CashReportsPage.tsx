@@ -87,7 +87,7 @@ const CashReportsPage: React.FC = () => {
         return (
           <table className="report-table">
             <thead>
-              <tr><th>Кассир</th><th>Операций</th><th>BUY</th><th>SELL</th><th>CONVERT</th><th>Оборот</th><th>Возвраты</th><th>Сторно</th></tr>
+              <tr><th>Кассир</th><th>Операций</th><th>Покупок</th><th>Продаж</th><th>Конверсий</th><th>Оборот</th><th>Возвраты</th><th>Сторно</th></tr>
             </thead>
             <tbody>
               {data.map((row: any) => (
@@ -183,7 +183,7 @@ const CashReportsPage: React.FC = () => {
         if (!Array.isArray(data)) return <p className="no-data">Нет данных</p>;
         return (
           <table className="report-table">
-            <thead><tr><th>Дата</th><th>Операций</th><th>BUY оборот</th><th>SELL оборот</th><th>CONVERT оборот</th><th>Общий оборот</th><th>Возвраты</th><th>Сторно</th></tr></thead>
+            <thead><tr><th>Дата</th><th>Операций</th><th>Оборот покупок</th><th>Оборот продаж</th><th>Оборот конверсий</th><th>Общий оборот</th><th>Возвраты</th><th>Сторно</th></tr></thead>
             <tbody>
               {data.map((row: any) => (
                 <tr key={row.date}>

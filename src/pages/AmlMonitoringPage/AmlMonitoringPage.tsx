@@ -92,7 +92,7 @@ const AmlMonitoringPage: React.FC = () => {
               <div className="summary-card">Конверсий: {safeNumber(data.summary?.byType?.CONVERT)}</div>
             </div>
             <table className="report-table"><thead><tr><th>Дата</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Кассир</th></tr></thead><tbody>
-              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.type}</td><td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td><td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td><td>{tx.cashierName}</td></tr>))}
+              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.type === 'BUY' ? 'Покупка' : tx.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td><td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td><td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td><td>{tx.cashierName}</td></tr>))}
             </tbody></table>
           </div>
         );
@@ -101,7 +101,7 @@ const AmlMonitoringPage: React.FC = () => {
           <div>
             <h3>Повторяющиеся операции (min {data.minCount} раз)</h3>
             <table className="report-table"><thead><tr><th>Клиент</th><th>Тип</th><th>Валюты</th><th>Кол-во</th></tr></thead><tbody>
-              {data.repeatedOperations?.map((op: any, idx: number) => (<tr key={idx}><td>{op.client?.fullName || 'Аноним'}</td><td>{op.type}</td><td>{op.currencyIn} → {op.currencyOut}</td><td>{safeNumber(op.operationCount)}</td></tr>))}
+              {data.repeatedOperations?.map((op: any, idx: number) => (<tr key={idx}><td>{op.client?.fullName || 'Аноним'}</td><td>{op.type === 'BUY' ? 'Покупка' : op.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td><td>{op.currencyIn} → {op.currencyOut}</td><td>{safeNumber(op.operationCount)}</td></tr>))}
             </tbody></table>
           </div>
         );
@@ -120,7 +120,7 @@ const AmlMonitoringPage: React.FC = () => {
             <h3>Подозрительные операции (сумма &gt; {safeNumber(data.threshold)} BYN)</h3>
             <div className="summary-cards warning">Найдено: {safeNumber(data.count)}</div>
             <table className="report-table"><thead><tr><th>Дата</th><th>Клиент</th><th>Кассир</th><th>Тип</th><th>Сумма (BYN)</th></tr></thead><tbody>
-              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.clientName}</td><td>{tx.cashierName}</td><td>{tx.type}</td><td className="suspicious">{safeNumber(tx.suspiciousAmount).toFixed(2)}</td></tr>))}
+              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.clientName}</td><td>{tx.cashierName}</td><td>{tx.type === 'BUY' ? 'Покупка' : tx.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td><td className="suspicious">{safeNumber(tx.suspiciousAmount).toFixed(2)}</td></tr>))}
             </tbody></table>
           </div>
         );
