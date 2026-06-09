@@ -13,12 +13,42 @@ const safeNumber = (value: any, defaultValue: number = 0): number => {
 };
 
 const systemActionLabels: Record<string, string> = {
-  LOGIN: 'Вход', LOGOUT: 'Выход', EXPORT_PDF: 'Экспорт PDF', EXPORT_EXCEL: 'Экспорт Excel',
-  GENERATE_REPORT: 'Генерация отчёта', UPDATE_CASH_LIMIT: 'Изменение лимита', ADMIN_BLOCK_SHIFT: 'Блокировка смены',
+  LOGIN: 'Вход',
+  LOGOUT: 'Выход',
+  EXPORT_PDF: 'Экспорт PDF',
+  EXPORT_EXCEL: 'Экспорт Excel',
+  GENERATE_REPORT: 'Генерация отчёта',
+  UPDATE_CASH_LIMIT: 'Изменение лимита',
+  ADMIN_BLOCK_SHIFT: 'Блокировка смены',
 };
-const resultLabels: Record<string, string> = { SUCCESS: 'Успешно', ERROR: 'Ошибка', CANCEL: 'Отмена' };
+
+const resultLabels: Record<string, string> = {
+  SUCCESS: 'Успешно',
+  ERROR: 'Ошибка',
+  CANCEL: 'Отмена',
+  CANCELLED: 'Отменён',
+  STORNO: 'Сторнирован',
+  REFUNDED: 'Возвращён',
+  PENDING: 'Ожидание',
+  COMPLETED: 'Завершён',
+  FAILED: 'Не удалось',
+};
+
+const statusLabels: Record<string, string> = {
+  COMPLETED: 'Завершена',
+  CANCELLED: 'Отменена',
+  CANCEL: 'Отмена',
+  STORNO: 'Сторнирована',
+  REFUNDED: 'Возвращена',
+  PENDING: 'В ожидании',
+  ACTIVE: 'Активна',
+  CLOSED: 'Закрыта',
+  BLOCKED: 'Заблокирована',
+};
+
 const translateSystemAction = (action: string): string => systemActionLabels[action] || action;
 const translateResult = (result: string): string => resultLabels[result] || result;
+const translateStatus = (status: string): string => statusLabels[status] || status;
 
 const AuditControlPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AuditSubReport>('controlTape');
@@ -95,7 +125,11 @@ const AuditControlPage: React.FC = () => {
       if (controlTapeData.length === 0) return <p className="no-data">Нет операций</p>;
       return (
         <table className="report-table">
-          <thead><tr><th>№ чека</th><th>Дата/время</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Нал/Безнал</th><th>Кассир</th><th>Статус</th></tr></thead>
+          <thead>
+            <tr>
+              <th>№ чека</th><th>Дата/время</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Нал/Безнал</th><th>Кассир</th><th>Статус</th>
+            </tr>
+          </thead>
           <tbody>
             {controlTapeData.map((item, idx) => (
               <tr key={item.checkNumber || idx}>
@@ -106,7 +140,7 @@ const AuditControlPage: React.FC = () => {
                 <td>{safeNumber(item.amountOut).toFixed(2)} {item.currencyOut}</td>
                 <td>{item.paymentType === 'CASH' ? 'Наличные' : 'Безналичные'}</td>
                 <td>{item.cashierName || '—'}</td>
-                <td>{item.status}</td>
+                <td>{translateStatus(item.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -118,7 +152,9 @@ const AuditControlPage: React.FC = () => {
       if (systemAuditData.length === 0) return <p className="no-data">Нет событий</p>;
       return (
         <table className="report-table">
-          <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Результат</th><th>IP</th><th>Детали</th></tr></thead>
+          <thead>
+            <tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Результат</th><th>IP</th><th>Детали</th></tr>
+          </thead>
           <tbody>
             {systemAuditData.map((log, idx) => (
               <tr key={log.id || idx}>
@@ -139,36 +175,90 @@ const AuditControlPage: React.FC = () => {
     if (activeTab === 'refunds' && data.items) {
       return (
         <div>
-          <div className="summary-cards"><div className="summary-card">Всего возвратов: {safeNumber(data.totalCount)}</div><div className="summary-card">Сумма: {safeNumber(data.totalAmount).toFixed(2)} BYN</div></div>
-          <table className="report-table"><thead><tr><th>ID</th><th>Кассир</th><th>Сумма</th><th>Валюта</th><th>Причина</th><th>Дата</th></tr></thead><tbody>
-            {data.items.map((item: any) => (<tr key={item.transactionId}><td>{item.transactionId?.slice(0,8)}</td><td>{item.cashierName}</td><td>{safeNumber(item.amountIn).toFixed(2)}</td><td>{item.currencyIn}</td><td>{item.reason}</td><td>{new Date(item.date).toLocaleString()}</td></tr>))}
-          </tbody></table>
+          <div className="summary-cards">
+            <div className="summary-card">Всего возвратов: {safeNumber(data.totalCount)}</div>
+            <div className="summary-card">Сумма: {safeNumber(data.totalAmount).toFixed(2)} BYN</div>
+          </div>
+          <table className="report-table">
+            <thead><tr><th>ID</th><th>Кассир</th><th>Сумма</th><th>Валюта</th><th>Причина</th><th>Дата</th></tr></thead>
+            <tbody>
+              {data.items.map((item: any) => (
+                <tr key={item.transactionId}>
+                  <td>{item.transactionId?.slice(0,8)}</td>
+                  <td>{item.cashierName}</td>
+                  <td>{safeNumber(item.amountIn).toFixed(2)}</td>
+                  <td>{item.currencyIn}</td>
+                  <td>{item.reason}</td>
+                  <td>{new Date(item.date).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       );
     }
     if (activeTab === 'storno' && data.items) {
       return (
         <div>
-          <div className="summary-cards"><div className="summary-card">Всего сторно: {safeNumber(data.totalCount)}</div><div className="summary-card">Сумма: {safeNumber(data.totalAmount).toFixed(2)} BYN</div></div>
-          <table className="report-table"><thead><tr><th>ID</th><th>Кассир</th><th>Сумма</th><th>Валюта</th><th>Причина</th><th>Дата</th></tr></thead><tbody>
-            {data.items.map((item: any) => (<tr key={item.transactionId}><td>{item.transactionId?.slice(0,8)}</td><td>{item.cashierName}</td><td>{safeNumber(item.amountIn).toFixed(2)}</td><td>{item.currencyIn}</td><td>{item.reason}</td><td>{new Date(item.date).toLocaleString()}</td></tr>))}
-          </tbody></table>
+          <div className="summary-cards">
+            <div className="summary-card">Всего сторно: {safeNumber(data.totalCount)}</div>
+            <div className="summary-card">Сумма: {safeNumber(data.totalAmount).toFixed(2)} BYN</div>
+          </div>
+          <table className="report-table">
+            <thead><tr><th>ID</th><th>Кассир</th><th>Сумма</th><th>Валюта</th><th>Причина</th><th>Дата</th></tr></thead>
+            <tbody>
+              {data.items.map((item: any) => (
+                <tr key={item.transactionId}>
+                  <td>{item.transactionId?.slice(0,8)}</td>
+                  <td>{item.cashierName}</td>
+                  <td>{safeNumber(item.amountIn).toFixed(2)}</td>
+                  <td>{item.currencyIn}</td>
+                  <td>{item.reason}</td>
+                  <td>{new Date(item.date).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       );
     }
     if (activeTab === 'cashierOps') {
       if (data.cashiers) {
         return (
-          <table className="report-table"><thead><tr><th>Кассир</th><th>Операций</th><th>Оборот BYN</th><th>Покупок</th><th>Продаж</th><th>Конверсий</th></tr></thead><tbody>
-            {data.cashiers.map((c: any) => (<tr key={c.cashierId}><td>{c.cashierName}</td><td>{safeNumber(c.totalOperations)}</td><td>{safeNumber(c.totalTurnoverBYN).toFixed(2)}</td><td>{safeNumber(c.buyCount)}</td><td>{safeNumber(c.sellCount)}</td><td>{safeNumber(c.convertCount)}</td></tr>))}
-          </tbody></table>
+          <table className="report-table">
+            <thead><tr><th>Кассир</th><th>Операций</th><th>Оборот BYN</th><th>Покупок</th><th>Продаж</th><th>Конверсий</th></tr></thead>
+            <tbody>
+              {data.cashiers.map((c: any) => (
+                <tr key={c.cashierId}>
+                  <td>{c.cashierName}</td>
+                  <td>{safeNumber(c.totalOperations)}</td>
+                  <td>{safeNumber(c.totalTurnoverBYN).toFixed(2)}</td>
+                  <td>{safeNumber(c.buyCount)}</td>
+                  <td>{safeNumber(c.sellCount)}</td>
+                  <td>{safeNumber(c.convertCount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         );
       } else {
         return (
-          <div><h3>Операции кассира: {data.cashier?.name}</h3>
-            <table className="report-table"><thead><tr><th>Дата</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Клиент</th></tr></thead><tbody>
-              {data.transactions?.map((tx: any) => (<tr key={tx.id}><td>{new Date(tx.createdAt).toLocaleString()}</td><td>{tx.type === 'BUY' ? 'Покупка' : tx.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td><td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td><td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td><td>{tx.clientName}</td></tr>))}
-            </tbody></table>
+          <div>
+            <h3>Операции кассира: {data.cashier?.name}</h3>
+            <table className="report-table">
+              <thead><tr><th>Дата</th><th>Тип</th><th>Отдано</th><th>Получено</th><th>Клиент</th></tr></thead>
+              <tbody>
+                {data.transactions?.map((tx: any) => (
+                  <tr key={tx.id}>
+                    <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                    <td>{tx.type === 'BUY' ? 'Покупка' : tx.type === 'SELL' ? 'Продажа' : 'Конверсия'}</td>
+                    <td>{safeNumber(tx.sumIn).toFixed(2)} {tx.currencyIn}</td>
+                    <td>{safeNumber(tx.sumOut).toFixed(2)} {tx.currencyOut}</td>
+                    <td>{tx.clientName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         );
       }
@@ -246,10 +336,27 @@ const AuditControlPage: React.FC = () => {
           <Input type="date" label="Дата до" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
         {activeTab === 'systemAudit' && (
-          <Select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} options={[{ value: '', label: 'Все действия' }, { value: 'LOGIN', label: 'Вход' }, { value: 'LOGOUT', label: 'Выход' }, { value: 'EXPORT_PDF', label: 'Экспорт PDF' }, { value: 'EXPORT_EXCEL', label: 'Экспорт Excel' }, { value: 'GENERATE_REPORT', label: 'Генерация отчёта' }, { value: 'UPDATE_CASH_LIMIT', label: 'Изменение лимита' }, { value: 'ADMIN_BLOCK_SHIFT', label: 'Блокировка смены' }]} />
+          <Select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            options={[
+              { value: '', label: 'Все действия' },
+              { value: 'LOGIN', label: 'Вход' },
+              { value: 'LOGOUT', label: 'Выход' },
+              { value: 'EXPORT_PDF', label: 'Экспорт PDF' },
+              { value: 'EXPORT_EXCEL', label: 'Экспорт Excel' },
+              { value: 'GENERATE_REPORT', label: 'Генерация отчёта' },
+              { value: 'UPDATE_CASH_LIMIT', label: 'Изменение лимита' },
+              { value: 'ADMIN_BLOCK_SHIFT', label: 'Блокировка смены' }
+            ]}
+          />
         )}
         {(activeTab === 'refunds' || activeTab === 'storno' || activeTab === 'cashierOps') && (
-          <Select value={cashierId} onChange={(e) => setCashierId(e.target.value)} options={[{ value: '', label: 'Все кассиры' }, ...usersList.map(u => ({ value: u.id, label: u.fullName }))]} />
+          <Select
+            value={cashierId}
+            onChange={(e) => setCashierId(e.target.value)}
+            options={[{ value: '', label: 'Все кассиры' }, ...usersList.map(u => ({ value: u.id, label: u.fullName }))]}
+          />
         )}
         <Button onClick={fetchReport} disabled={loading}>Сформировать</Button>
         {showExport && <Button onClick={exportExcel} variant="secondary">Excel</Button>}
