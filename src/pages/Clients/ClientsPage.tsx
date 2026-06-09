@@ -11,8 +11,15 @@ const ClientsPage: React.FC = () => {
   const { currentCashier } = useStore();
   const role = currentCashier?.role;
   const isAdmin = role === 'admin';
-  const canEdit = role === 'admin' || role === 'senior_cashier';
+  const isSeniorCashier = role === 'senior_cashier';
+  const isCashier = role === 'cashier';
   const isEconomist = role === 'economist';
+
+  // Права:
+  // - Создавать клиента могут админ, старший кассир и обычный кассир
+  const canCreate = isAdmin || isSeniorCashier || isCashier;
+  // - Редактировать и удалять могут только админ и старший кассир
+  const canEdit = isAdmin || isSeniorCashier;
 
   const { addClient, editClient } = useClients();
   const [clients, setClients] = useState<any[]>([]);
@@ -38,11 +45,19 @@ const ClientsPage: React.FC = () => {
   }, [search]);
 
   const handleSave = async (data: any) => {
-    if (!canEdit) return;
+    // При редактировании проверяем canEdit, при создании — canCreate
     if (editingClient) {
+      if (!canEdit) {
+        toast.error('У вас нет прав на редактирование клиента');
+        return;
+      }
       await editClient(editingClient.id, data);
       toast.success('Клиент обновлён');
     } else {
+      if (!canCreate) {
+        toast.error('У вас нет прав на добавление клиента');
+        return;
+      }
       await addClient(data);
       toast.success('Клиент добавлен');
     }
@@ -52,7 +67,10 @@ const ClientsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!isAdmin) return;
+    if (!isAdmin) {
+      toast.error('Только администратор может удалять клиентов');
+      return;
+    }
     if (window.confirm('Вы уверены, что хотите удалить этого клиента?')) {
       await deleteClient(id);
       toast.success('Клиент удалён');
@@ -63,7 +81,6 @@ const ClientsPage: React.FC = () => {
   const residentCount = clients.filter(c => c.isResident).length;
   const nonResidentCount = clients.filter(c => !c.isResident).length;
 
-  // Общая разметка карточек статистики (вынесена, чтобы не дублировать)
   const statsSection = (
     <div className="stats-cards">
       <div className="stat-card">
@@ -81,7 +98,7 @@ const ClientsPage: React.FC = () => {
     </div>
   );
 
-  // Таблица для режима только просмотра (экономист)
+  // Таблица только для просмотра (экономист)
   const readOnlyTable = (
     <div className="history-table-container">
       <table className="history-table">
@@ -118,7 +135,7 @@ const ClientsPage: React.FC = () => {
     </div>
   );
 
-  // Полная таблица с действиями (админ / старший кассир)
+  // Полная таблица с действиями (админ, старший кассир, кассир)
   const fullTable = (
     <div className="history-table-container">
       <table className="history-table">
@@ -143,16 +160,18 @@ const ClientsPage: React.FC = () => {
                 </span>
               </td>
               <td className="actions-cell">
-                <Button
-                  variant="secondary"
-                  size="small"
-                  onClick={() => {
-                    setEditingClient(c);
-                    setModalOpen(true);
-                  }}
-                >
-                  Изменить
-                </Button>
+                {canEdit && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setEditingClient(c);
+                      setModalOpen(true);
+                    }}
+                  >
+                    Изменить
+                  </Button>
+                )}
                 {isAdmin && (
                   <Button variant="danger" size="small" onClick={() => handleDelete(c.id)}>
                     Удалить
@@ -174,7 +193,7 @@ const ClientsPage: React.FC = () => {
   );
 
   // Режим экономиста (только чтение)
-  if (isEconomist && !canEdit) {
+  if (isEconomist) {
     return (
       <div className="container">
         <h1 className="history-page-title">Клиенты (просмотр)</h1>
@@ -192,7 +211,7 @@ const ClientsPage: React.FC = () => {
     );
   }
 
-  // Полный интерфейс для администратора и старшего кассира
+  // Полный интерфейс для администратора, старшего кассира и обычного кассира
   return (
     <div className="container">
       <h1 className="history-page-title">Управление клиентами</h1>
@@ -206,15 +225,17 @@ const ClientsPage: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           className="filter-input"
         />
-        <Button
-          onClick={() => {
-            setEditingClient(null);
-            setModalOpen(true);
-          }}
-          variant="primary"
-        >
-          + Новый клиент
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => {
+              setEditingClient(null);
+              setModalOpen(true);
+            }}
+            variant="primary"
+          >
+            + Новый клиент
+          </Button>
+        )}
       </div>
 
       {fullTable}
