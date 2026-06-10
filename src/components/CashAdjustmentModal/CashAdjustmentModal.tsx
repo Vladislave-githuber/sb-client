@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Select } from '../../components/Shared';
 import { createAdjustment } from '../../api/cash-adjustments';
 import toast from 'react-hot-toast';
-import '../../styles/cancelmodal.css'; // переиспользуем стили модалок
+import '../../styles/cancelmodal.css';
 
 interface Props {
   isOpen: boolean;
@@ -22,6 +22,13 @@ const CashAdjustmentModal: React.FC<Props> = ({
   const [type, setType] = useState<'SURPLUS' | 'SHORTAGE'>('SURPLUS');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // При открытии модалки выбираем первую валюту (обычно BYN)
+  useEffect(() => {
+    if (isOpen && currencies.length > 0 && !currency) {
+      setCurrency(currencies[0]);
+    }
+  }, [isOpen, currencies, currency]);
 
   if (!isOpen) return null;
 
@@ -46,7 +53,7 @@ const CashAdjustmentModal: React.FC<Props> = ({
       );
       onSuccess();
       onClose();
-      setCurrency('');
+      // Сброс формы (кроме валюты, она установится заново при открытии)
       setAmount('');
       setReason('');
       setType('SURPLUS');

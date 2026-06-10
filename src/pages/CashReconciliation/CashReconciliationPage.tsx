@@ -32,20 +32,13 @@ const CashReconciliationPage: React.FC = () => {
         map[c.currency] = Number(c.currentBalance);
       });
       setElectronicBalances(map);
-
-      // При первом запуске инициализируем физические остатки как копию электронных
-      if (!isInitialized.current) {
-        const initPhysical: Record<string, number> = {};
-        currencies.forEach(c => { initPhysical[c] = map[c] || 0; });
-        setPhysicalBalances(initPhysical);
-        isInitialized.current = true;
-      }
     } catch (err) {
       console.error('fetchElectronicBalances error', err);
       toast.error('Ошибка загрузки электронной кассы');
     }
   };
 
+  // Загрузка истории сверок
   const fetchReconciliationHistory = async () => {
     if (!currentShift) return;
     try {
@@ -57,6 +50,7 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
+  // Загрузка корректировок
   const fetchAdjustments = async () => {
     if (!currentShift) return;
     try {
@@ -65,6 +59,29 @@ const CashReconciliationPage: React.FC = () => {
     } catch (err) {
       console.error('fetchAdjustments error', err);
     }
+  };
+
+  // Инициализация физических остатков из последней сверки (если есть)
+  const initPhysicalFromLastReconciliation = () => {
+    if (!currentShift) return;
+    const lastByCurrency = new Map<string, any>();
+    history.forEach(rec => {
+      const existing = lastByCurrency.get(rec.currency);
+      if (!existing || new Date(rec.reconciledAt) > new Date(existing.reconciledAt)) {
+        lastByCurrency.set(rec.currency, rec);
+      }
+    });
+    const newPhysical: Record<string, number> = {};
+    currencies.forEach(curr => {
+      const last = lastByCurrency.get(curr);
+      if (last && last.physicalAmount !== undefined) {
+        newPhysical[curr] = Number(last.physicalAmount);
+      } else {
+        newPhysical[curr] = electronicBalances[curr] || 0;
+      }
+    });
+    setPhysicalBalances(newPhysical);
+    isInitialized.current = true;
   };
 
   useEffect(() => {
@@ -77,6 +94,23 @@ const CashReconciliationPage: React.FC = () => {
       fetchAdjustments();
     }
   }, [currentShift, historyStartDate, historyEndDate]);
+
+  // Когда загружены электронные остатки и история – инициализируем физические
+  useEffect(() => {
+    if (Object.keys(electronicBalances).length > 0 && history.length > 0 && !isInitialized.current) {
+      initPhysicalFromLastReconciliation();
+    }
+  }, [electronicBalances, history]);
+
+  // Если история пуста, но электронные остатки есть – инициализируем физические как копию электронных
+  useEffect(() => {
+    if (Object.keys(electronicBalances).length > 0 && history.length === 0 && !isInitialized.current) {
+      const initPhysical: Record<string, number> = {};
+      currencies.forEach(c => { initPhysical[c] = electronicBalances[c] || 0; });
+      setPhysicalBalances(initPhysical);
+      isInitialized.current = true;
+    }
+  }, [electronicBalances, history]);
 
   const handlePhysicalChange = (currency: string, value: string) => {
     const num = parseFloat(value);
@@ -111,8 +145,7 @@ const CashReconciliationPage: React.FC = () => {
         comment: comment.trim() || 'Расхождений нет',
       });
       toast.success('Сверка сохранена');
-      // После сохранения сверки обновляем электронные остатки и историю
-      await fetchElectronicBalances(); // физические остатки НЕ перезаписываются (флаг уже true)
+      await fetchElectronicBalances();
       await fetchReconciliationHistory();
       await fetchAdjustments();
       setComment('');
@@ -140,7 +173,7 @@ const CashReconciliationPage: React.FC = () => {
     return Array.from(lastMap.values()).sort((a, b) => a.currency.localeCompare(b.currency));
   }, [history]);
 
-  // Проверяем, есть ли неурегулированное расхождение
+  // Проверяем, есть ли неурегулированное расхождение (с учётом корректировок)
   const hasUnresolvedDifference = useMemo(() => {
     for (const curr of currencies) {
       const diff = getDifference(curr);
@@ -309,8 +342,9 @@ const CashReconciliationPage: React.FC = () => {
         onClose={() => setShowAdjustmentModal(false)}
         onSuccess={() => {
           fetchAdjustments();
-          fetchElectronicBalances();   // физические остатки не сбросятся (флаг уже true)
+          fetchElectronicBalances();
           fetchReconciliationHistory();
+          setTimeout(() => initPhysicalFromLastReconciliation(), 100);
         }}
         currencies={currencies}
       />
