@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import api from '../../api/axios';
 import { useStore } from '../../store/useStore';
 import { Button, Input, Select } from '../../components/Shared';
@@ -13,14 +13,14 @@ const CashReconciliationPage: React.FC = () => {
   const [physicalBalances, setPhysicalBalances] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<any[]>([]); // все сверки (сырые)
+  const [history, setHistory] = useState<any[]>([]);
   const [historyStartDate, setHistoryStartDate] = useState('');
   const [historyEndDate, setHistoryEndDate] = useState('');
-
   const [adjustments, setAdjustments] = useState<CashAdjustment[]>([]);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
 
   const currencies = ['BYN', 'USD', 'EUR', 'RUB'];
+  const isInitialized = useRef(false);
 
   // Загрузка электронных остатков
   const fetchElectronicBalances = async () => {
@@ -32,17 +32,20 @@ const CashReconciliationPage: React.FC = () => {
         map[c.currency] = Number(c.currentBalance);
       });
       setElectronicBalances(map);
-      // Инициализируем физические значения как копию электронных
-      const initPhysical: Record<string, number> = {};
-      currencies.forEach(c => { initPhysical[c] = map[c] || 0; });
-      setPhysicalBalances(initPhysical);
+
+      // При первом запуске инициализируем физические остатки как копию электронных
+      if (!isInitialized.current) {
+        const initPhysical: Record<string, number> = {};
+        currencies.forEach(c => { initPhysical[c] = map[c] || 0; });
+        setPhysicalBalances(initPhysical);
+        isInitialized.current = true;
+      }
     } catch (err) {
       console.error('fetchElectronicBalances error', err);
       toast.error('Ошибка загрузки электронной кассы');
     }
   };
 
-  // Загрузка истории сверок (все записи)
   const fetchReconciliationHistory = async () => {
     if (!currentShift) return;
     try {
@@ -54,7 +57,6 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
-  // Загрузка корректировок
   const fetchAdjustments = async () => {
     if (!currentShift) return;
     try {
@@ -89,7 +91,6 @@ const CashReconciliationPage: React.FC = () => {
 
   const hasDifference = currencies.some(curr => Math.abs(getDifference(curr)) > 0.01);
 
-  // Сохранить сверку
   const handleSubmit = async () => {
     if (!currentShift) {
       toast.error('Смена не открыта');
@@ -110,8 +111,8 @@ const CashReconciliationPage: React.FC = () => {
         comment: comment.trim() || 'Расхождений нет',
       });
       toast.success('Сверка сохранена');
-      // Обновляем данные после сверки
-      await fetchElectronicBalances();
+      // После сохранения сверки обновляем электронные остатки и историю
+      await fetchElectronicBalances(); // физические остатки НЕ перезаписываются (флаг уже true)
       await fetchReconciliationHistory();
       await fetchAdjustments();
       setComment('');
@@ -127,7 +128,7 @@ const CashReconciliationPage: React.FC = () => {
     return <div className="container">Смена не открыта</div>;
   }
 
-  // --- Группировка истории: показываем только последнюю сверку для каждой валюты ---
+  // Группировка истории – последняя сверка по валюте
   const lastReconciliationByCurrency = useMemo(() => {
     const lastMap = new Map<string, any>();
     history.forEach(rec => {
@@ -139,7 +140,7 @@ const CashReconciliationPage: React.FC = () => {
     return Array.from(lastMap.values()).sort((a, b) => a.currency.localeCompare(b.currency));
   }, [history]);
 
-  // --- Проверяем, есть ли неурегулированное расхождение (с учётом корректировок) ---
+  // Проверяем, есть ли неурегулированное расхождение
   const hasUnresolvedDifference = useMemo(() => {
     for (const curr of currencies) {
       const diff = getDifference(curr);
@@ -181,7 +182,6 @@ const CashReconciliationPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Комментарий при расхождении */}
       {hasDifference && (
         <div className="comment-section">
           <label>Причина расхождения:</label>
@@ -224,7 +224,6 @@ const CashReconciliationPage: React.FC = () => {
         )}
       </div>
 
-      {/* История корректировок */}
       <h2>2. История урегулирований (списания / оприходования)</h2>
       {adjustments.length === 0 ? (
         <p>Нет операций урегулирования.</p>
@@ -255,9 +254,8 @@ const CashReconciliationPage: React.FC = () => {
         </table>
       )}
 
-      {/* История сверок (только последние записи по валютам) */}
       <h2>3. Последняя сверка по валютам</h2>
-      <div className="history-filters" style={{ marginBottom: '1rem' }}>
+      <div className="history-filters">
         <Input
           type="date"
           label="Дата от (фильтр для истории, необязательно)"
@@ -311,7 +309,7 @@ const CashReconciliationPage: React.FC = () => {
         onClose={() => setShowAdjustmentModal(false)}
         onSuccess={() => {
           fetchAdjustments();
-          fetchElectronicBalances();
+          fetchElectronicBalances();   // физические остатки не сбросятся (флаг уже true)
           fetchReconciliationHistory();
         }}
         currencies={currencies}
