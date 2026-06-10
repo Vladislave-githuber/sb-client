@@ -8,9 +8,9 @@ import ReceiptModal from "../../components/ReceiptModal/ReceiptModal";
 import ClientSearch from "../../components/Clients/ClientSearch";
 import ClientModal from "../../components/Clients/ClientModal";
 import { Button, Input } from "../../components/Shared";
-import { useClients } from "../../hooks/useClients";
 import toast from "react-hot-toast";
 import type { IClient } from "../../types";
+import api from "../../api/axios"; // прямой импорт API
 import "../../styles/exchange.css";
 
 type OperationType = "BUY" | "SELL" | "CONVERT";
@@ -67,7 +67,6 @@ const ExchangePage: React.FC = () => {
     fetchCurrentShift 
   } = useStore();
   const { rates, loading: ratesLoading, error: ratesError } = useRates();
-  const { addClient } = useClients();
 
   const [type, setType] = useState<OperationType>("BUY");
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
@@ -292,13 +291,21 @@ const ExchangePage: React.FC = () => {
     }
   };
 
+  // Прямой вызов API для создания клиента — без обновления глобального состояния
   const handleClientSaved = async (clientData: Omit<IClient, 'id' | 'createdAt'>) => {
-    const newClient = await addClient(clientData);
-    setSelectedClient(newClient);
-    setShowClientModal(false);
+    try {
+      const { data } = await api.post('/clients', clientData);
+      const newClient: IClient = data;
+      setSelectedClient(newClient);
+      setShowClientModal(false);
+      toast.success('Клиент добавлен');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Ошибка при добавлении клиента';
+      toast.error(msg);
+    }
   };
 
-  // ========== УСЛОВНЫЕ ВОЗВРАТЫ (ТОЛЬКО ПОСЛЕ ВСЕХ ХУКОВ) ==========
+  // ========== УСЛОВНЫЕ ВОЗВРАТЫ ==========
   if (ratesLoading || loadingBalances || loadingShift) {
     return (
       <div className="container">
