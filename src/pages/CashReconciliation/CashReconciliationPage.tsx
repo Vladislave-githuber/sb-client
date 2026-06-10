@@ -8,7 +8,9 @@ import { getAdjustments, type CashAdjustment } from '../../api/cash-adjustments'
 import '../../styles/cashreconciliation.css';
 
 const CashReconciliationPage: React.FC = () => {
+  // ========== ВСЕ ХУКИ ДО ЛЮБОГО УСЛОВНОГО ВОЗВРАТА ==========
   const { currentShift } = useStore();
+
   const [electronicBalances, setElectronicBalances] = useState<Record<string, number>>({});
   const [physicalBalances, setPhysicalBalances] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
@@ -22,6 +24,7 @@ const CashReconciliationPage: React.FC = () => {
   const currencies = ['BYN', 'USD', 'EUR', 'RUB'];
   const isInitialized = useRef(false);
 
+  // Загрузка электронных остатков
   const fetchElectronicBalances = async () => {
     if (!currentShift) return;
     try {
@@ -52,7 +55,6 @@ const CashReconciliationPage: React.FC = () => {
     if (!currentShift) return;
     try {
       const data = await getAdjustments();
-      // Приводим amount к числу, если пришло строкой
       const normalized = data.map(a => ({ ...a, amount: Number(a.amount) }));
       setAdjustments(normalized);
     } catch (err) {
@@ -82,6 +84,7 @@ const CashReconciliationPage: React.FC = () => {
     isInitialized.current = true;
   };
 
+  // Эффекты
   useEffect(() => {
     fetchElectronicBalances();
   }, [currentShift]);
@@ -108,6 +111,36 @@ const CashReconciliationPage: React.FC = () => {
     }
   }, [electronicBalances, history]);
 
+  // Мемоизированные значения
+  const lastReconciliationByCurrency = useMemo(() => {
+    const lastMap = new Map<string, any>();
+    history.forEach(rec => {
+      const existing = lastMap.get(rec.currency);
+      if (!existing || new Date(rec.reconciledAt) > new Date(existing.reconciledAt)) {
+        lastMap.set(rec.currency, rec);
+      }
+    });
+    return Array.from(lastMap.values()).sort((a, b) => a.currency.localeCompare(b.currency));
+  }, [history]);
+
+  const hasUnresolvedDifference = useMemo(() => {
+    for (const curr of currencies) {
+      const diff = (physicalBalances[curr] || 0) - (electronicBalances[curr] || 0);
+      if (Math.abs(diff) <= 0.01) continue;
+      const adjSum = adjustments
+        .filter(a => a.currency === curr)
+        .reduce((sum, a) => sum + (a.type === 'SURPLUS' ? a.amount : -a.amount), 0);
+      if (Math.abs(diff - adjSum) > 0.01) return true;
+    }
+    return false;
+  }, [electronicBalances, physicalBalances, adjustments]);
+
+  // ========== УСЛОВНЫЙ ВОЗВРАТ ПОСЛЕ ВСЕХ ХУКОВ ==========
+  if (!currentShift) {
+    return <div className="container">Смена не открыта</div>;
+  }
+
+  // Обработчики событий
   const handlePhysicalChange = (currency: string, value: string) => {
     const num = parseFloat(value);
     setPhysicalBalances(prev => ({ ...prev, [currency]: isNaN(num) ? 0 : num }));
@@ -152,33 +185,6 @@ const CashReconciliationPage: React.FC = () => {
       setLoading(false);
     }
   };
-
-  if (!currentShift) {
-    return <div className="container">Смена не открыта</div>;
-  }
-
-  const lastReconciliationByCurrency = useMemo(() => {
-    const lastMap = new Map<string, any>();
-    history.forEach(rec => {
-      const existing = lastMap.get(rec.currency);
-      if (!existing || new Date(rec.reconciledAt) > new Date(existing.reconciledAt)) {
-        lastMap.set(rec.currency, rec);
-      }
-    });
-    return Array.from(lastMap.values()).sort((a, b) => a.currency.localeCompare(b.currency));
-  }, [history]);
-
-  const hasUnresolvedDifference = useMemo(() => {
-    for (const curr of currencies) {
-      const diff = getDifference(curr);
-      if (Math.abs(diff) <= 0.01) continue;
-      const adjSum = adjustments
-        .filter(a => a.currency === curr)
-        .reduce((sum, a) => sum + (a.type === 'SURPLUS' ? a.amount : -a.amount), 0);
-      if (Math.abs(diff - adjSum) > 0.01) return true;
-    }
-    return false;
-  }, [electronicBalances, physicalBalances, adjustments]);
 
   return (
     <div className="container reconciliation-page">
