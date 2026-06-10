@@ -10,7 +10,7 @@ import '../../styles/cashreconciliation.css';
 const PAGE_SIZE = 5;
 
 const CashReconciliationPage: React.FC = () => {
-  const { currentShift, currentCashier } = useStore();
+  const { currentShift } = useStore();
   const [electronicBalances, setElectronicBalances] = useState<Record<string, number>>({});
   const [physicalBalances, setPhysicalBalances] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
@@ -20,13 +20,11 @@ const CashReconciliationPage: React.FC = () => {
   const [historyEndDate, setHistoryEndDate] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
 
-  // Корректировки (списание/оприходование)
   const [adjustments, setAdjustments] = useState<CashAdjustment[]>([]);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
 
   const currencies = ['BYN', 'USD', 'EUR', 'RUB'];
 
-  // Загрузка электронных остатков
   const fetchElectronicBalances = async () => {
     if (!currentShift) return;
     try {
@@ -40,33 +38,30 @@ const CashReconciliationPage: React.FC = () => {
       currencies.forEach(c => { initPhysical[c] = map[c] || 0; });
       setPhysicalBalances(initPhysical);
     } catch (err) {
+      console.error('fetchElectronicBalances error', err);
       toast.error('Ошибка загрузки электронной кассы');
     }
   };
 
-  // Загрузка истории сверок
   const fetchReconciliationHistory = async () => {
     if (!currentShift) return;
     try {
-      const params: any = { shiftId: currentShift.id };
-      if (historyStartDate) params.startDate = historyStartDate;
-      if (historyEndDate) params.endDate = historyEndDate;
-      const { data } = await api.get('/cash-ledger/reconciliations', { params });
+      const { data } = await api.get('/cash-ledger/reconciliations');
       setHistory(data);
       setHistoryPage(1);
     } catch (err) {
+      console.error('fetchReconciliationHistory error', err);
       toast.error('Ошибка загрузки истории');
     }
   };
 
-  // Загрузка корректировок
   const fetchAdjustments = async () => {
     if (!currentShift) return;
     try {
       const data = await getAdjustments();
       setAdjustments(data);
     } catch (err) {
-      console.error('Ошибка загрузки корректировок', err);
+      console.error('fetchAdjustments error', err);
     }
   };
 
@@ -75,8 +70,10 @@ const CashReconciliationPage: React.FC = () => {
   }, [currentShift]);
 
   useEffect(() => {
-    fetchReconciliationHistory();
-    fetchAdjustments();
+    if (currentShift) {
+      fetchReconciliationHistory();
+      fetchAdjustments();
+    }
   }, [currentShift, historyStartDate, historyEndDate]);
 
   const handlePhysicalChange = (currency: string, value: string) => {
@@ -114,8 +111,10 @@ const CashReconciliationPage: React.FC = () => {
       toast.success('Сверка сохранена');
       await fetchElectronicBalances();
       await fetchReconciliationHistory();
+      await fetchAdjustments(); // <-- важно: обновляем корректировки
       setComment('');
     } catch (err: any) {
+      console.error('handleSubmit error', err);
       toast.error(err.response?.data?.message || 'Ошибка сверки');
     } finally {
       setLoading(false);
@@ -132,26 +131,31 @@ const CashReconciliationPage: React.FC = () => {
     return <div className="container">Смена не открыта</div>;
   }
 
-  // Проверяем, есть ли неурегулированное расхождение (учитывая корректировки)
+  // Вычисляем, есть ли неурегулированное расхождение
   const hasUnresolvedDifference = (() => {
     for (const curr of currencies) {
       const diff = getDifference(curr);
       if (Math.abs(diff) <= 0.01) continue;
-      // Сумма корректировок по этой валюте (излишек +, недостача -)
       const adjSum = adjustments
         .filter(a => a.currency === curr)
         .reduce((sum, a) => sum + (a.type === 'SURPLUS' ? a.amount : -a.amount), 0);
-      if (Math.abs(diff - adjSum) > 0.01) return true;
+      const remaining = Math.abs(diff - adjSum);
+      console.log(`[debug] ${curr}: diff=${diff}, adjSum=${adjSum}, remaining=${remaining}`);
+      if (remaining > 0.01) return true;
     }
     return false;
   })();
+
+  // Для отладки
+  console.log('[debug] hasDifference=', hasDifference);
+  console.log('[debug] hasUnresolvedDifference=', hasUnresolvedDifference);
+  console.log('[debug] adjustments=', adjustments);
 
   return (
     <div className="container reconciliation-page">
       <h1>Сверка кассы и расхождения</h1>
       <p>Смена: {currentShift.id.slice(0, 8)}</p>
 
-      {/* Блок ввода фактических остатков */}
       <h2>1. Фактические остатки по валютам</h2>
       <div className="physical-grid">
         {currencies.map(currency => (
@@ -176,7 +180,6 @@ const CashReconciliationPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Блок комментария при расхождении */}
       {hasDifference && (
         <div className="comment-section">
           <label>Причина расхождения:</label>
@@ -219,7 +222,6 @@ const CashReconciliationPage: React.FC = () => {
         )}
       </div>
 
-      {/* История корректировок (списаний/оприходований) */}
       <h2>2. История урегулирований (списания / оприходования)</h2>
       {adjustments.length === 0 ? (
         <p>Нет операций урегулирования.</p>
@@ -250,7 +252,6 @@ const CashReconciliationPage: React.FC = () => {
         </table>
       )}
 
-      {/* Блок истории сверок */}
       <h2>3. История сверок за смену</h2>
       <div className="history-filters">
         <Input
