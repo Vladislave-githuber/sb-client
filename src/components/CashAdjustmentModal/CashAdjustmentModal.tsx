@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Input, Select } from '../../components/Shared';
 import { createAdjustment } from '../../api/cash-adjustments';
 import toast from 'react-hot-toast';
+import '../../styles/cancelmodal.css'; // переиспользуем стили модалок
 
 interface Props {
   isOpen: boolean;
@@ -45,7 +46,6 @@ const CashAdjustmentModal: React.FC<Props> = ({
       );
       onSuccess();
       onClose();
-      // Сброс формы
       setCurrency('');
       setAmount('');
       setReason('');
@@ -59,8 +59,8 @@ const CashAdjustmentModal: React.FC<Props> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3>Урегулирование расхождения</h3>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>Урегулирование расхождения</h2>
         <div style={{ marginBottom: '1rem' }}>
           <Select
             value={currency}
@@ -95,7 +95,7 @@ const CashAdjustmentModal: React.FC<Props> = ({
             placeholder="Например: излишек при пересчёте наличных"
           />
         </div>
-        <div className="modal-buttons" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+        <div className="modal-actions">
           <Button onClick={onClose} variant="secondary">
             Отмена
           </Button>
