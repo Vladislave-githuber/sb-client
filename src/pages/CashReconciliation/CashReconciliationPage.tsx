@@ -3,12 +3,14 @@ import api from '../../api/axios';
 import { useStore } from '../../store/useStore';
 import { Button, Input, Select } from '../../components/Shared';
 import toast from 'react-hot-toast';
+import CashAdjustmentModal from '../../components/CashAdjustmentModal/CashAdjustmentModal';
+import { getAdjustments, type CashAdjustment } from '../../api/cash-adjustments';
 import '../../styles/cashreconciliation.css';
 
-const PAGE_SIZE = 5; // количество записей истории на странице
+const PAGE_SIZE = 5;
 
 const CashReconciliationPage: React.FC = () => {
-  const { currentShift } = useStore();
+  const { currentShift, currentCashier } = useStore();
   const [electronicBalances, setElectronicBalances] = useState<Record<string, number>>({});
   const [physicalBalances, setPhysicalBalances] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
@@ -18,9 +20,13 @@ const CashReconciliationPage: React.FC = () => {
   const [historyEndDate, setHistoryEndDate] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
 
+  // Корректировки (списание/оприходование)
+  const [adjustments, setAdjustments] = useState<CashAdjustment[]>([]);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+
   const currencies = ['BYN', 'USD', 'EUR', 'RUB'];
 
-  // ========== Загрузка текущих электронных остатков ==========
+  // Загрузка электронных остатков
   const fetchElectronicBalances = async () => {
     if (!currentShift) return;
     try {
@@ -30,7 +36,6 @@ const CashReconciliationPage: React.FC = () => {
         map[c.currency] = Number(c.currentBalance);
       });
       setElectronicBalances(map);
-      // Инициализируем физические значения как копию электронных (для удобства)
       const initPhysical: Record<string, number> = {};
       currencies.forEach(c => { initPhysical[c] = map[c] || 0; });
       setPhysicalBalances(initPhysical);
@@ -39,7 +44,7 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
-  // ========== Загрузка истории сверок с пагинацией ==========
+  // Загрузка истории сверок
   const fetchReconciliationHistory = async () => {
     if (!currentShift) return;
     try {
@@ -48,9 +53,20 @@ const CashReconciliationPage: React.FC = () => {
       if (historyEndDate) params.endDate = historyEndDate;
       const { data } = await api.get('/cash-ledger/reconciliations', { params });
       setHistory(data);
-      setHistoryPage(1); // сброс страницы при новых фильтрах
+      setHistoryPage(1);
     } catch (err) {
       toast.error('Ошибка загрузки истории');
+    }
+  };
+
+  // Загрузка корректировок
+  const fetchAdjustments = async () => {
+    if (!currentShift) return;
+    try {
+      const data = await getAdjustments();
+      setAdjustments(data);
+    } catch (err) {
+      console.error('Ошибка загрузки корректировок', err);
     }
   };
 
@@ -60,9 +76,9 @@ const CashReconciliationPage: React.FC = () => {
 
   useEffect(() => {
     fetchReconciliationHistory();
+    fetchAdjustments();
   }, [currentShift, historyStartDate, historyEndDate]);
 
-  // ========== Логика сверки ==========
   const handlePhysicalChange = (currency: string, value: string) => {
     const num = parseFloat(value);
     setPhysicalBalances(prev => ({ ...prev, [currency]: isNaN(num) ? 0 : num }));
@@ -106,7 +122,6 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
-  // ========== Пагинация истории ==========
   const totalHistoryPages = Math.ceil(history.length / PAGE_SIZE);
   const paginatedHistory = history.slice(
     (historyPage - 1) * PAGE_SIZE,
@@ -117,12 +132,26 @@ const CashReconciliationPage: React.FC = () => {
     return <div className="container">Смена не открыта</div>;
   }
 
+  // Проверяем, есть ли неурегулированное расхождение (учитывая корректировки)
+  const hasUnresolvedDifference = (() => {
+    for (const curr of currencies) {
+      const diff = getDifference(curr);
+      if (Math.abs(diff) <= 0.01) continue;
+      // Сумма корректировок по этой валюте (излишек +, недостача -)
+      const adjSum = adjustments
+        .filter(a => a.currency === curr)
+        .reduce((sum, a) => sum + (a.type === 'SURPLUS' ? a.amount : -a.amount), 0);
+      if (Math.abs(diff - adjSum) > 0.01) return true;
+    }
+    return false;
+  })();
+
   return (
     <div className="container reconciliation-page">
       <h1>Сверка кассы и расхождения</h1>
       <p>Смена: {currentShift.id.slice(0, 8)}</p>
 
-      {/* Блок ввода фактических остатков – сетка 2×2 */}
+      {/* Блок ввода фактических остатков */}
       <h2>1. Фактические остатки по валютам</h2>
       <div className="physical-grid">
         {currencies.map(currency => (
@@ -178,15 +207,51 @@ const CashReconciliationPage: React.FC = () => {
         <Button onClick={handleSubmit} disabled={loading}>
           {loading ? 'Сохранение...' : 'Сохранить сверку'}
         </Button>
-        {hasDifference && (
-          <p className="warning-message">
-            ⚠️ Обнаружено расхождение! Для закрытия смены необходимо провести инкассацию или указать причину.
-          </p>
+        {hasUnresolvedDifference && (
+          <div className="warning-block" style={{ marginTop: '1rem' }}>
+            <p className="warning-message">
+              ⚠️ Обнаружено не урегулированное расхождение! Для закрытия смены необходимо оформить списание недостачи или оприходование излишка.
+            </p>
+            <Button onClick={() => setShowAdjustmentModal(true)} variant="primary">
+              Урегулировать расхождение
+            </Button>
+          </div>
         )}
       </div>
 
-      {/* Блок истории сверок с пагинацией */}
-      <h2>2. История сверок за смену</h2>
+      {/* История корректировок (списаний/оприходований) */}
+      <h2>2. История урегулирований (списания / оприходования)</h2>
+      {adjustments.length === 0 ? (
+        <p>Нет операций урегулирования.</p>
+      ) : (
+        <table className="history-table">
+          <thead>
+            <tr>
+              <th>Дата и время</th>
+              <th>Валюта</th>
+              <th>Тип</th>
+              <th>Сумма</th>
+              <th>Причина</th>
+              <th>Кто создал</th>
+            </tr>
+          </thead>
+          <tbody>
+            {adjustments.map((adj) => (
+              <tr key={adj.id}>
+                <td>{new Date(adj.createdAt).toLocaleString()}</td>
+                <td>{adj.currency}</td>
+                <td>{adj.type === 'SURPLUS' ? 'Оприходование (+)' : 'Списание (-)'}</td>
+                <td>{adj.amount.toFixed(2)}</td>
+                <td>{adj.reason}</td>
+                <td>{adj.creator?.fullName || adj.createdBy.slice(0, 8)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Блок истории сверок */}
+      <h2>3. История сверок за смену</h2>
       <div className="history-filters">
         <Input
           type="date"
@@ -259,6 +324,17 @@ const CashReconciliationPage: React.FC = () => {
           )}
         </>
       )}
+
+      <CashAdjustmentModal
+        isOpen={showAdjustmentModal}
+        onClose={() => setShowAdjustmentModal(false)}
+        onSuccess={() => {
+          fetchAdjustments();
+          fetchElectronicBalances();
+          fetchReconciliationHistory();
+        }}
+        currencies={currencies}
+      />
     </div>
   );
 };
