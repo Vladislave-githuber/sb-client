@@ -26,6 +26,16 @@ const getStatusLabel = (status?: string): string => {
   }
 };
 
+// Функция для перевода типа операции на русский
+const getOperationTypeLabel = (type: string): string => {
+  switch (type) {
+    case 'BUY': return 'Покупка';
+    case 'SELL': return 'Продажа';
+    case 'CONVERT': return 'Конверсия';
+    default: return type;
+  }
+};
+
 const HistoryPage: React.FC = () => {
   const { currentCashier } = useStore();
   const isAdmin = currentCashier?.role === 'admin';
@@ -350,7 +360,7 @@ const HistoryPage: React.FC = () => {
             {paginatedTransactions.map((tx) => (
               <tr key={tx.id}>
                 <td>{new Date(tx.createdAt).toLocaleString()}</td>
-                <td>{tx.type}</td>
+                <td>{getOperationTypeLabel(tx.type)}</td>  {/* Переведённый тип операции */}
                 <td>{tx.sumIn} {tx.currencyIn}</td>
                 <td>{tx.sumOut} {tx.currencyOut}</td>
                 <td>{getCashierName(tx)}</td>
