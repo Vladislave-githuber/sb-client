@@ -10,7 +10,7 @@ import ClientModal from "../../components/Clients/ClientModal";
 import { Button, Input } from "../../components/Shared";
 import toast from "react-hot-toast";
 import type { IClient } from "../../types";
-import api from "../../api/axios"; // прямой импорт API
+import api from "../../api/axios";
 import "../../styles/exchange.css";
 
 type OperationType = "BUY" | "SELL" | "CONVERT";
@@ -82,17 +82,14 @@ const ExchangePage: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
 
-  // Право на создание нового клиента: админ, старший кассир или обычный кассир
   const canCreateClient = currentCashier?.role === 'admin' || 
                           currentCashier?.role === 'senior_cashier' || 
                           currentCashier?.role === 'cashier';
 
-  // Загрузка смены
   useEffect(() => {
     fetchCurrentShift();
   }, [fetchCurrentShift]);
 
-  // Загрузка балансов
   useEffect(() => {
     if (currentCashier) fetchCashBalances();
   }, [currentCashier, fetchCashBalances]);
@@ -102,7 +99,6 @@ const ExchangePage: React.FC = () => {
     [rates]
   );
 
-  // Пересчёт суммы
   const recalc = useCallback(
     (changedField: "from" | "to", newValue: number) => {
       if (newValue < 0) newValue = 0;
@@ -134,7 +130,6 @@ const ExchangePage: React.FC = () => {
     [type, fromCurrency, toCurrency, rates]
   );
 
-  // Эффект для расчёта сдачи
   useEffect(() => {
     if (givenAmount > 0 && fromAmount > 0) {
       if (givenAmount < fromAmount) {
@@ -149,29 +144,53 @@ const ExchangePage: React.FC = () => {
     }
   }, [givenAmount, fromAmount, fromCurrency]);
 
-  // Эффект для смены валют при переключении типа
+  // ========== ОСНОВНОЕ ИСПРАВЛЕНИЕ ==========
+  // Эффект сброса формы – ТОЛЬКО при смене типа операции (без зависимости от rates)
   useEffect(() => {
+    // Корректируем валюты в зависимости от типа
     if (type === "BUY") {
       setFromCurrency("BYN");
-      if (toCurrency === "BYN") setToCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
+      if (toCurrency === "BYN") {
+        const other = rates.find(c => c.code !== "BYN")?.code;
+        if (other) setToCurrency(other);
+      }
     } else if (type === "SELL") {
       setToCurrency("BYN");
-      if (fromCurrency === "BYN") setFromCurrency(rates.find(c => c.code !== "BYN")?.code || "USD");
+      if (fromCurrency === "BYN") {
+        const other = rates.find(c => c.code !== "BYN")?.code;
+        if (other) setFromCurrency(other);
+      }
     } else if (type === "CONVERT") {
       if (fromCurrency === toCurrency) {
         const other = rates.find(c => c.code !== fromCurrency)?.code;
         if (other) setToCurrency(other);
       }
     }
+    // Сбрасываем суммы и выбранного клиента ТОЛЬКО при смене типа
     setFromAmount(0);
     setToAmount(0);
     setGivenAmount(0);
     setChangeAmount(0);
     setError("");
     setSelectedClient(null);
-  }, [type, rates, toCurrency, fromCurrency]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]); // rates не включён – сброса при обновлении курсов НЕ БУДЕТ
 
-  // Эффект для синхронизации полей
+  // Дополнительный эффект для "мягкой" коррекции валют при обновлении rates (без сброса формы)
+  useEffect(() => {
+    if (type === "BUY" && fromCurrency !== "BYN") {
+      setFromCurrency("BYN");
+    }
+    if (type === "SELL" && toCurrency !== "BYN") {
+      setToCurrency("BYN");
+    }
+    if (type === "CONVERT" && fromCurrency === toCurrency) {
+      const other = rates.find(c => c.code !== fromCurrency)?.code;
+      if (other) setToCurrency(other);
+    }
+  }, [rates, type, fromCurrency, toCurrency]);
+
+  // Эффект для синхронизации полей (остаётся без изменений)
   useEffect(() => {
     if (fromAmount !== 0 || toAmount !== 0) {
       if (activeInput === "from") recalc("from", fromAmount);
@@ -179,7 +198,6 @@ const ExchangePage: React.FC = () => {
     }
   }, [fromCurrency, toCurrency, recalc, activeInput, fromAmount, toAmount]);
 
-  // Обработчики
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     const newVal = isNaN(val) ? 0 : val;
@@ -291,7 +309,6 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // Прямой вызов API для создания клиента — без обновления глобального состояния
   const handleClientSaved = async (clientData: Omit<IClient, 'id' | 'createdAt'>) => {
     try {
       const { data } = await api.post('/clients', clientData);
@@ -305,7 +322,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // ========== УСЛОВНЫЕ ВОЗВРАТЫ ==========
+  // Условные рендеры загрузки и ошибок
   if (ratesLoading || loadingBalances || loadingShift) {
     return (
       <div className="container">
@@ -329,7 +346,6 @@ const ExchangePage: React.FC = () => {
     );
   }
 
-  // ========== ОСНОВНОЙ РЕНДЕР ==========
   const isFromFixed = type === "BUY";
   const isToFixed = type === "SELL";
   const fromDisabled = isFromFixed && fromCurrency === "BYN";
