@@ -22,7 +22,6 @@ const CashReconciliationPage: React.FC = () => {
   const currencies = ['BYN', 'USD', 'EUR', 'RUB'];
   const isInitialized = useRef(false);
 
-  // Загрузка электронных остатков
   const fetchElectronicBalances = async () => {
     if (!currentShift) return;
     try {
@@ -38,7 +37,6 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
-  // Загрузка истории сверок
   const fetchReconciliationHistory = async () => {
     if (!currentShift) return;
     try {
@@ -50,18 +48,18 @@ const CashReconciliationPage: React.FC = () => {
     }
   };
 
-  // Загрузка корректировок
   const fetchAdjustments = async () => {
     if (!currentShift) return;
     try {
       const data = await getAdjustments();
-      setAdjustments(data);
+      // Приводим amount к числу, если пришло строкой
+      const normalized = data.map(a => ({ ...a, amount: Number(a.amount) }));
+      setAdjustments(normalized);
     } catch (err) {
       console.error('fetchAdjustments error', err);
     }
   };
 
-  // Инициализация физических остатков из последней сверки (если есть)
   const initPhysicalFromLastReconciliation = () => {
     if (!currentShift) return;
     const lastByCurrency = new Map<string, any>();
@@ -95,14 +93,12 @@ const CashReconciliationPage: React.FC = () => {
     }
   }, [currentShift, historyStartDate, historyEndDate]);
 
-  // Когда загружены электронные остатки и история – инициализируем физические
   useEffect(() => {
     if (Object.keys(electronicBalances).length > 0 && history.length > 0 && !isInitialized.current) {
       initPhysicalFromLastReconciliation();
     }
   }, [electronicBalances, history]);
 
-  // Если история пуста, но электронные остатки есть – инициализируем физические как копию электронных
   useEffect(() => {
     if (Object.keys(electronicBalances).length > 0 && history.length === 0 && !isInitialized.current) {
       const initPhysical: Record<string, number> = {};
@@ -161,7 +157,6 @@ const CashReconciliationPage: React.FC = () => {
     return <div className="container">Смена не открыта</div>;
   }
 
-  // Группировка истории – последняя сверка по валюте
   const lastReconciliationByCurrency = useMemo(() => {
     const lastMap = new Map<string, any>();
     history.forEach(rec => {
@@ -173,7 +168,6 @@ const CashReconciliationPage: React.FC = () => {
     return Array.from(lastMap.values()).sort((a, b) => a.currency.localeCompare(b.currency));
   }, [history]);
 
-  // Проверяем, есть ли неурегулированное расхождение (с учётом корректировок)
   const hasUnresolvedDifference = useMemo(() => {
     for (const curr of currencies) {
       const diff = getDifference(curr);
@@ -278,7 +272,7 @@ const CashReconciliationPage: React.FC = () => {
                 <td>{new Date(adj.createdAt).toLocaleString()}</td>
                 <td>{adj.currency}</td>
                 <td>{adj.type === 'SURPLUS' ? 'Оприходование (+)' : 'Списание (-)'}</td>
-                <td>{adj.amount.toFixed(2)}</td>
+                <td>{Number(adj.amount).toFixed(2)}</td>
                 <td>{adj.reason}</td>
                 <td>{adj.creator?.fullName || adj.createdBy.slice(0, 8)}</td>
               </tr>
